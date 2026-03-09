@@ -1,0 +1,65 @@
+<main class="login-container" aria-labelledby="login-title">
+  <pre>
+    {{ auth.user() | json}}
+  </pre>
+  <div class="login-card">
+    <h1 id="login-title" class="login-title">Iniciar sesión</h1>
+
+    @if (errorMessage()) {
+      <div class="alert alert--error" role="alert" aria-live="assertive">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="field">
+        <label for="email" class="field__label">Correo electrónico</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="field__input"
+          [class.field__input--error]="emailInvalid()"
+          autocomplete="email"
+          placeholder="tu@correo.com"
+          aria-required="true"
+          [attr.aria-describedby]="emailInvalid() ? 'email-error' : null"
+        />
+        @if (emailInvalid()) {
+          <span id="email-error" class="field__error" role="alert">
+            Ingresa un correo electrónico válido.
+          </span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="password" class="field__label">Contraseña</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          class="field__input"
+          [class.field__input--error]="passwordInvalid()"
+          autocomplete="current-password"
+          placeholder="••••••••"
+          aria-required="true"
+          [attr.aria-describedby]="passwordInvalid() ? 'password-error' : null"
+        />
+        @if (passwordInvalid()) {
+          <span id="password-error" class="field__error" role="alert">
+            La contraseña es obligatoria.
+          </span>
+        }
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn--primary"
+        [disabled]="loading()"
+        [attr.aria-busy]="loading()"
+      >
+        {{ loading() ? 'Ingresando...' : 'Ingresar' }}
+      </button>
+    </form>
+  </div>
+</main>
