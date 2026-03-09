@@ -16,7 +16,7 @@ export class AuthStore {
   readonly initialized = this._initialized.asReadonly();
 
   constructor() {
-    this.supabase.authChanges((event, session) => {
+    this.supabase.authChanges((_, session) => {
       this._session.set(session);
       this._user.set(session?.user ?? null);
       this._initialized.set(true);

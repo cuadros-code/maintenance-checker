@@ -1,0 +1,23 @@
+<div class="layout">
+  <header class="navbar" role="banner">
+    <span class="navbar__brand">Maintenance Checker</span>
+
+    <div class="navbar__user">
+      <span class="navbar__email" aria-label="Usuario autenticado">
+        {{ auth.user()?.email }}
+      </span>
+      <button
+        class="btn btn--logout"
+        (click)="signOut()"
+        [disabled]="loggingOut()"
+        [attr.aria-busy]="loggingOut()"
+      >
+        {{ loggingOut() ? 'Saliendo...' : 'Cerrar sesión' }}
+      </button>
+    </div>
+  </header>
+
+  <main class="content" id="main-content">
+    <h1 class="content__title">Dashboard</h1>
+  </main>
+</div>

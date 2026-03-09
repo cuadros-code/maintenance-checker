@@ -1,8 +1,25 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthStore } from '../../core/auth.store';
+import { SupabaseService } from '../../services/supabase.service';
 
 @Component({
   selector: 'app-dashboard',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<h1>Dashboard</h1>`,
+  templateUrl: './dashboard.component.html',
+  styleUrl: './dashboard.component.css',
 })
-export class DashboardComponent {}
+export class DashboardComponent {
+  readonly auth = inject(AuthStore);
+  private readonly supabase = inject(SupabaseService);
+  private readonly router = inject(Router);
+
+  readonly loggingOut = signal(false);
+
+  async signOut(): Promise<void> {
+    this.loggingOut.set(true);
+    await this.supabase.signOut();
+    this.auth.clear();
+    this.router.navigate(['/login']);
+  }
+}
