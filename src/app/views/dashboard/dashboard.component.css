@@ -2,7 +2,6 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f9fafb;
 }
 
 /* Navbar */
@@ -12,16 +11,15 @@
   justify-content: space-between;
   padding: 0 1.5rem;
   height: 3.75rem;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  background: #FFF;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
 .navbar__brand {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 900;
   color: #111827;
   letter-spacing: -0.02em;
 }
@@ -62,14 +60,21 @@
   cursor: not-allowed;
 }
 
+/* Body (sidebar + main) */
+.body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
 /* Content */
 .content {
   flex: 1;
-  padding: 2rem 1.5rem;
+  padding: 1rem 1.5rem;
+  overflow-y: auto;
 }
 
-.content__title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
+.dashboard__title {
+  font-size: 1.6rem;
+  font-weight: 500;
 }

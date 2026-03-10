@@ -13,6 +13,18 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./views/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./views/dashboard-home/dashboard-home.component').then((m) => m.DashboardHomeComponent),
+      },
+      {
+        path: 'equipos',
+        loadComponent: () =>
+          import('./views/machines/machines.component').then((m) => m.MachinesComponent),
+      },
+    ],
   },
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: '**', redirectTo: 'login' },

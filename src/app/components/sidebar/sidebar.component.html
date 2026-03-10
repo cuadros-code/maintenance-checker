@@ -1,0 +1,19 @@
+<nav class="sidebar" aria-label="Menú principal">
+  <ul class="sidebar__nav" role="list">
+    @for (item of navItems; track item.route) {
+      <li>
+        <a
+          class="sidebar__link"
+          [routerLink]="item.route"
+          routerLinkActive="sidebar__link--active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          #rla="routerLinkActive"
+          [attr.aria-current]="rla.isActive ? 'page' : null"
+        >
+          <span class="material-icons">{{ item.icon }}</span>
+          <span class="sidebar__label">{{ item.label }}</span>
+        </a>
+      </li>
+    }
+  </ul>
+</nav>
