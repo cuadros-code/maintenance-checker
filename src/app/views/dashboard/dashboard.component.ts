@@ -16,10 +16,13 @@ export class DashboardComponent {
 
   readonly loggingOut = signal(false);
 
-  async signOut(): Promise<void> {
+  signOut(): void {
     this.loggingOut.set(true);
-    await this.supabase.signOut();
-    this.auth.clear();
-    this.router.navigate(['/login']);
+    this.supabase.signOut().subscribe({
+      next: () => {
+        this.auth.clear();
+        this.router.navigate(['/login']);
+      },
+    });
   }
 }

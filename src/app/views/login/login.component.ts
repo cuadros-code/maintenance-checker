@@ -32,7 +32,7 @@ export class LoginComponent {
   readonly emailInvalid = signal(false);
   readonly passwordInvalid = signal(false);
 
-  async onSubmit(): Promise<void> {
+  onSubmit(): void {
     this.errorMessage.set('');
 
     const { email, password } = this.form.controls;
@@ -44,16 +44,17 @@ export class LoginComponent {
     if (this.form.invalid) return;
 
     this.loading.set(true);
-    const { error } = await this.supabase.signInWithPassword(
-      email.value!,
-      password.value!,
-    );
-    this.loading.set(false);
-
-    if (error) {
-      this.errorMessage.set(error.message);
-    } else {
-      this.router.navigate(['/dashboard']);
-    }
+    this.supabase.signInWithPassword(email.value!, password.value!) 
+      .subscribe({
+        next: ({ error }) => {
+          this.loading.set(false);
+          if (error) {
+            this.errorMessage.set(error.message);
+          } else {
+            this.router.navigate(['/dashboard']);
+          }
+        },
+        
+    });
   }
 }
