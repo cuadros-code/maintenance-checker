@@ -4,6 +4,10 @@
   gap: 1.5rem;
 }
 
+.hidden {
+  display: none!important;
+}
+
 .machines__header {
   display: flex;
   align-items: center;

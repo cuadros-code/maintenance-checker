@@ -7,6 +7,7 @@ export type MachineStatus = 'active' | 'inactive' | 'under_maintenance';
 
 export interface Machine {
   id: number;
+  code: string;
   name: string;
   location: string;
   serial_number: string;
@@ -43,9 +44,10 @@ export class MachinesComponent {
   };
 
   readonly form = this.fb.nonNullable.group({
+    code: ['', [Validators.required, Validators.maxLength(50)]],
     name: ['', [Validators.required, Validators.maxLength(100)]],
     location: ['', [Validators.required, Validators.maxLength(150)]],
-    serial_number: ['', [Validators.required, Validators.maxLength(50)]],
+    serial_number: [''],
     status: ['active' as MachineStatus, Validators.required],
   });
 

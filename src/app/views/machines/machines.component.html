@@ -19,9 +19,10 @@
       <table class="machines__table">
         <thead>
           <tr>
+            <th scope="col">Código</th>
             <th scope="col">Nombre</th>
             <th scope="col">Ubicación</th>
-            <th scope="col">N.º de serie</th>
+            <!-- <th scope="col">N.º de serie</th> -->
             <th scope="col">Estado</th>
             <th scope="col">Creado</th>
           </tr>
@@ -29,9 +30,10 @@
         <tbody>
           @for (machine of machines(); track machine.id) {
             <tr>
+              <td>{{ machine.code }}</td>
               <td>{{ machine.name }}</td>
               <td>{{ machine.location }}</td>
-              <td class="machines__serial">{{ machine.serial_number }}</td>
+              <!-- <td class="machines__serial">{{ machine.serial_number }}</td> -->
               <td>
                 <span
                   class="machines__badge"
@@ -74,6 +76,25 @@
 
       <form class="modal__form" [formGroup]="form" (ngSubmit)="submit()">
         <div class="form-field">
+          <label class="form-field__label" for="code">Código</label>
+          <input
+            id="code"
+            class="form-field__input"
+            type="text"
+            formControlName="code"
+            placeholder="Ej. EQ-001"
+            autocomplete="off"
+            [class.form-field__input--error]="form.controls.code.invalid && form.controls.code.touched"
+            aria-describedby="codigo-error"
+          />
+          @if (form.controls.code.invalid && form.controls.code.touched) {
+            <span class="form-field__error" id="codigo-error" role="alert">
+              El código es requerido.
+            </span>
+          }
+        </div>
+
+        <div class="form-field">
           <label class="form-field__label" for="name">Nombre</label>
           <input
             id="name"
@@ -111,7 +132,7 @@
           }
         </div>
 
-        <div class="form-field">
+        <div class="form-field hidden">
           <label class="form-field__label" for="serial_number">Número de serie</label>
           <input
             id="serial_number"
