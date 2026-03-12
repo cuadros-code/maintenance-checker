@@ -1,6 +1,20 @@
 <div class="layout">
   <header class="navbar" role="banner">
-    <span class="navbar__brand">MyTracker</span>
+    <div class="navbar__start">
+      <button
+        class="btn--menu"
+        type="button"
+        (click)="sidebarOpen.update(v => !v)"
+        [attr.aria-expanded]="sidebarOpen()"
+        aria-controls="sidebar"
+        aria-label="Abrir menú de navegación"
+      >
+        <span class="btn--menu__bar"></span>
+        <span class="btn--menu__bar"></span>
+        <span class="btn--menu__bar"></span>
+      </button>
+      <span class="navbar__brand">MyTracker</span>
+    </div>
 
     <div class="navbar__user">
       <span class="navbar__email" aria-label="Usuario autenticado">
@@ -8,6 +22,7 @@
       </span>
       <button
         class="btn btn--logout"
+        type="button"
         (click)="signOut()"
         [disabled]="loggingOut()"
         [attr.aria-busy]="loggingOut()"
@@ -18,7 +33,11 @@
   </header>
 
   <div class="body">
-    <app-sidebar />
+    <app-sidebar
+      id="sidebar"
+      [open]="sidebarOpen()"
+      (closed)="sidebarOpen.set(false)"
+    />
 
     <main class="content" id="main-content">
       <router-outlet />

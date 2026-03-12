@@ -1,12 +1,165 @@
 <section class="machines">
   <header class="machines__header">
     <h1 class="machines__title">Equipos</h1>
-    <button class="btn btn--primary" type="button">
+    <button class="btn btn--primary" type="button" (click)="openModal()">
       + Nuevo equipo
     </button>
   </header>
 
-  <div class="machines__empty" role="status">
-    <p>No hay equipos registrados.</p>
-  </div>
+  @if (loading()) {
+    <div class="machines__status" role="status" aria-live="polite">
+      <p>Cargando equipos…</p>
+    </div>
+  } @else if (machines().length === 0) {
+    <div class="machines__status" role="status">
+      <p>No hay equipos registrados.</p>
+    </div>
+  } @else {
+    <div class="machines__table-wrapper" role="region" aria-label="Lista de equipos">
+      <table class="machines__table">
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Ubicación</th>
+            <th scope="col">N.º de serie</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Creado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (machine of machines(); track machine.id) {
+            <tr>
+              <td>{{ machine.name }}</td>
+              <td>{{ machine.location }}</td>
+              <td class="machines__serial">{{ machine.serial_number }}</td>
+              <td>
+                <span
+                  class="machines__badge"
+                  [class.machines__badge--active]="machine.status === 'active'"
+                  [class.machines__badge--inactive]="machine.status === 'inactive'"
+                  [class.machines__badge--maintenance]="machine.status === 'under_maintenance'"
+                >
+                  {{ statusLabels[machine.status] }}
+                </span>
+              </td>
+              <td>{{ machine.created_at | date: 'dd/MM/yyyy' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 </section>
+
+@if (modalOpen()) {
+  <div
+    class="modal__backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-title"
+    (click)="onBackdropClick($event)"
+  >
+    <div class="modal">
+      <header class="modal__header">
+        <h2 class="modal__title" id="modal-title">Nuevo equipo</h2>
+        <button
+          class="modal__close"
+          type="button"
+          aria-label="Cerrar modal"
+          (click)="closeModal()"
+        >
+          &#x2715;
+        </button>
+      </header>
+
+      <form class="modal__form" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-field">
+          <label class="form-field__label" for="name">Nombre</label>
+          <input
+            id="name"
+            class="form-field__input"
+            type="text"
+            formControlName="name"
+            placeholder="Ej. Compresor principal"
+            autocomplete="off"
+            [class.form-field__input--error]="form.controls.name.invalid && form.controls.name.touched"
+            aria-describedby="name-error"
+          />
+          @if (form.controls.name.invalid && form.controls.name.touched) {
+            <span class="form-field__error" id="name-error" role="alert">
+              El nombre es requerido.
+            </span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="form-field__label" for="location">Ubicación</label>
+          <input
+            id="location"
+            class="form-field__input"
+            type="text"
+            formControlName="location"
+            placeholder="Ej. Planta 1 — Área A"
+            autocomplete="off"
+            [class.form-field__input--error]="form.controls.location.invalid && form.controls.location.touched"
+            aria-describedby="location-error"
+          />
+          @if (form.controls.location.invalid && form.controls.location.touched) {
+            <span class="form-field__error" id="location-error" role="alert">
+              La ubicación es requerida.
+            </span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="form-field__label" for="serial_number">Número de serie</label>
+          <input
+            id="serial_number"
+            class="form-field__input"
+            type="text"
+            formControlName="serial_number"
+            placeholder="Ej. SN-2024-00123"
+            autocomplete="off"
+            [class.form-field__input--error]="form.controls.serial_number.invalid && form.controls.serial_number.touched"
+            aria-describedby="serial-error"
+          />
+          @if (form.controls.serial_number.invalid && form.controls.serial_number.touched) {
+            <span class="form-field__error" id="serial-error" role="alert">
+              El número de serie es requerido.
+            </span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="form-field__label" for="status">Estado</label>
+          <select
+            id="status"
+            class="form-field__input form-field__select"
+            formControlName="status"
+          >
+            @for (opt of statusOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
+        <footer class="modal__footer">
+          <button
+            class="btn btn--secondary"
+            type="button"
+            (click)="closeModal()"
+          >
+            Cancelar
+          </button>
+          <button
+            class="btn btn--primary"
+            type="submit"
+            [disabled]="submitting()"
+          >
+            {{ submitting() ? 'Guardando…' : 'Guardar equipo' }}
+          </button>
+        </footer>
+      </form>
+    </div>
+  </div>
+}

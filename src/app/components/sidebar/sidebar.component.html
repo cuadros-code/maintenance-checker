@@ -1,4 +1,16 @@
-<nav class="sidebar" aria-label="Menú principal">
+@if (open()) {
+  <div
+    class="sidebar__overlay"
+    aria-hidden="true"
+    (click)="closed.emit()"
+  ></div>
+}
+
+<nav
+  class="sidebar"
+  [class.sidebar--open]="open()"
+  aria-label="Menú principal"
+>
   <ul class="sidebar__nav" role="list">
     @for (item of navItems; track item.route) {
       <li>
@@ -9,8 +21,9 @@
           [routerLinkActiveOptions]="{ exact: true }"
           #rla="routerLinkActive"
           [attr.aria-current]="rla.isActive ? 'page' : null"
+          (click)="closed.emit()"
         >
-          <span class="material-icons">{{ item.icon }}</span>
+          <span class="material-icons" aria-hidden="true">{{ item.icon }}</span>
           <span class="sidebar__label">{{ item.label }}</span>
         </a>
       </li>

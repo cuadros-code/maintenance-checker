@@ -19,10 +19,14 @@ export interface Profile {
   providedIn: 'root',
 })
 export class SupabaseService {
-  private supabase: SupabaseClient
+  private _supabase: SupabaseClient
 
   constructor() {
-    this.supabase = supabase
+    this._supabase = supabase
+  }
+
+  get supabase(){
+    return this._supabase;
   }
 
   getUser(): Observable<User | null> {

@@ -18,6 +18,7 @@ export class DashboardComponent {
   private readonly router = inject(Router);
 
   readonly loggingOut = signal(false);
+  readonly sidebarOpen = signal(false);
 
   signOut(): void {
     this.loggingOut.set(true);

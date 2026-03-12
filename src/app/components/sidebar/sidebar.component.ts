@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 interface NavItem {
@@ -15,6 +15,9 @@ interface NavItem {
   styleUrl: './sidebar.component.css',
 })
 export class SidebarComponent {
+  readonly open = input(false);
+  readonly closed = output<void>();
+
   readonly navItems: NavItem[] = [
     {
       label: 'Dashboard',
