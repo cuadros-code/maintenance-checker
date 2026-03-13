@@ -25,6 +25,11 @@ export class SidebarComponent {
       icon: 'dashboard',
     },
     {
+      label: 'Mantenimientos',
+      route: '/dashboard/mantenimientos',
+      icon: 'settings'
+    },
+    {
       label: 'Equipos',
       route: '/dashboard/equipos',
       icon: 'build',
@@ -34,5 +39,6 @@ export class SidebarComponent {
       route: '/dashboard/tecnicos',
       icon: 'groups',
     },
+    
   ];
 }

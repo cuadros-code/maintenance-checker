@@ -1,0 +1,1 @@
+export type MachineStatus = 'active' | 'inactive' | 'under_maintenance';
