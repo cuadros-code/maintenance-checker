@@ -1,9 +1,11 @@
 <section class="maintenance">
   <header class="maintenance__header">
     <h1 class="maintenance__title">Mantenimientos</h1>
-    <app-button variant="primary" type="button" (click)="openModal()">
-      Programar mantenimiento
-    </app-button>
+    @if (authStore.isAdmin()) {
+      <app-button (click)="openModal()">
+        Programar mantenimiento
+      </app-button>
+    }
   </header>
 
   @if (maintenanceService.loading()) {

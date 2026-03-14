@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core'
+import { Injectable, signal } from '@angular/core'
 import {
   AuthChangeEvent,
   Session,
@@ -7,6 +7,7 @@ import {
 } from '@supabase/supabase-js'
 import { from, map, Observable } from 'rxjs'
 import { supabase } from '../core/supabase'
+import { jwtDecode } from 'jwt-decode';
 
 export interface Profile {
   id?: string
@@ -19,7 +20,10 @@ export interface Profile {
   providedIn: 'root',
 })
 export class SupabaseService {
+
   private _supabase: SupabaseClient
+  private readonly userRole = signal<string | null>(null);
+  readonly role = this.userRole.asReadonly();
 
   constructor() {
     this._supabase = supabase

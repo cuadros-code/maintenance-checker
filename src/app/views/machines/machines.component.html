@@ -1,9 +1,11 @@
 <section class="machines">
   <header class="machines__header">
     <h1 class="machines__title">Equipos</h1>
-    <button class="btn btn--primary" type="button" (click)="openModal()">
-      Nuevo equipo
-    </button>
+    @if (authStore.isAdmin()) {
+      <app-button (click)="openModal()">
+        Nuevo equipo
+      </app-button>
+    }
   </header>
 
   @if (machinesService.loading()) {

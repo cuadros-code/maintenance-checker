@@ -4,11 +4,13 @@ import { DatePipe } from '@angular/common';
 import { MachineStatus } from '../../constants/machines.const';
 import { Machine, MachinesService } from '../../services/machines.service';
 import { ModalComponent } from '../../components/modal/modal.component';
+import { AuthStore } from '../../core/auth.store';
+import { ButtonComponent } from '../../components/button/button.component';
 
 @Component({
   selector: 'app-machines',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, DatePipe, ModalComponent],
+  imports: [ReactiveFormsModule, DatePipe, ModalComponent, ButtonComponent],
   templateUrl: './machines.component.html',
   styleUrl: './machines.component.css',
   host: {
@@ -18,6 +20,7 @@ import { ModalComponent } from '../../components/modal/modal.component';
 export class MachinesComponent {
   private readonly fb = inject(FormBuilder);
   readonly machinesService = inject(MachinesService);
+  readonly authStore = inject(AuthStore);
 
   readonly modalOpen = signal(false);
   readonly submitting = signal(false);

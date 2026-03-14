@@ -4,6 +4,7 @@ import { DatePipe } from '@angular/common';
 import { ButtonComponent } from '../../components/button/button.component';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { Machine, MachinesService } from '../../services/machines.service';
+import { AuthStore } from '../../core/auth.store';
 import {
   Maintenance,
   MaintenancePayload,
@@ -27,6 +28,7 @@ export class MaintenanceView {
   private readonly fb = inject(FormBuilder);
   readonly machinesService = inject(MachinesService);
   readonly maintenanceService = inject(MaintenanceService);
+  readonly authStore = inject(AuthStore);
 
   readonly modalOpen = signal(false);
   readonly submitting = signal(false);
