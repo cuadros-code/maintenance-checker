@@ -24,6 +24,7 @@
             <th scope="col">Estado</th>
             <th scope="col">Fecha programada</th>
             <th scope="col">Técnico</th>
+            <th scope="col"><span class="sr-only">Acciones</span></th>
           </tr>
         </thead>
         <tbody>
@@ -60,6 +61,33 @@
               </td>
               <td>{{ item.scheduled_at | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td>{{ item.technician_name || '—' }}</td>
+              <td class="maintenance__actions-cell">
+                <div class="maintenance__dropdown">
+                  <button
+                    class="maintenance__dropdown-toggle"
+                    type="button"
+                    [attr.aria-expanded]="openDropdownId() === item.id"
+                    [attr.aria-label]="'Acciones para mantenimiento de ' + (machineMap().get(item.machine_id)?.name ?? item.machine_id)"
+                    (click)="toggleDropdown(item.id, $event)"
+                  >
+                    &#8942;
+                  </button>
+                  @if (openDropdownId() === item.id) {
+                    <ul class="maintenance__dropdown-menu" role="menu">
+                      <li role="none">
+                        <button
+                          class="maintenance__dropdown-item"
+                          type="button"
+                          role="menuitem"
+                          (click)="openEditModal(item)"
+                        >
+                          Editar mantenimiento
+                        </button>
+                      </li>
+                    </ul>
+                  }
+                </div>
+              </td>
             </tr>
           }
         </tbody>
@@ -69,7 +97,7 @@
 </section>
 
 @if (modalOpen()) {
-  <app-modal title="Programar mantenimiento" (closed)="closeModal()">
+  <app-modal [title]="modalTitle()" (closed)="closeModal()">
     <form class="mnt-form" [formGroup]="form" (ngSubmit)="submit()">
 
       <div class="form-field">
@@ -106,6 +134,21 @@
         </select>
       </div>
 
+      @if (isEditing()) {
+        <div class="form-field">
+          <label class="form-field__label" for="status">Estado</label>
+          <select
+            id="status"
+            class="form-field__input form-field__select"
+            formControlName="status"
+          >
+            @for (opt of statusOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+      }
+
       <div class="form-field">
         <label class="form-field__label" for="scheduled_at">Fecha y hora programada</label>
         <input
@@ -113,7 +156,7 @@
           class="form-field__input"
           type="datetime-local"
           formControlName="scheduled_at"
-          [attr.min]="minScheduledAt"
+          [attr.min]="isEditing() ? null : minScheduledAt"
           [class.form-field__input--error]="form.controls.scheduled_at.invalid && form.controls.scheduled_at.touched"
           aria-describedby="scheduled-error"
         />
@@ -163,7 +206,7 @@
           Cancelar
         </app-button>
         <app-button variant="primary" type="submit" [disabled]="submitting()">
-          {{ submitting() ? 'Guardando…' : 'Programar' }}
+          {{ submitLabel() }}
         </app-button>
       </footer>
 
