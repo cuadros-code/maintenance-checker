@@ -1,20 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { SupabaseService } from '../../services/supabase.service';
 import { MachineStatus } from '../../constants/machines.const';
+import { Machine, MachinesService } from '../../services/machines.service';
 import { ModalComponent } from '../../components/modal/modal.component';
-
-
-export interface Machine {
-  id: number;
-  code: string;
-  name: string;
-  location: string;
-  serial_number: string;
-  status: MachineStatus;
-  created_at: string;
-}
 
 @Component({
   selector: 'app-machines',
@@ -28,10 +17,8 @@ export interface Machine {
 })
 export class MachinesComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly supabaseService = inject(SupabaseService);
+  readonly machinesService = inject(MachinesService);
 
-  readonly machines = signal<Machine[]>([]);
-  readonly loading = signal(true);
   readonly modalOpen = signal(false);
   readonly submitting = signal(false);
   readonly editingMachine = signal<Machine | null>(null);
@@ -58,18 +45,7 @@ export class MachinesComponent {
   });
 
   constructor() {
-    this.loadMachines();
-  }
-
-  private async loadMachines(): Promise<void> {
-    this.loading.set(true);
-    const { data } = await this.supabaseService.supabase
-      .from('machines')
-      .select('*')
-      .order('status', { ascending: true });
-
-    this.machines.set((data as Machine[]) ?? []);
-    this.loading.set(false);
+    this.machinesService.load();
   }
 
   openModal(): void {
@@ -119,23 +95,11 @@ export class MachinesComponent {
     const editing = this.editingMachine();
 
     try {
-      const query = editing
-        ? this.supabaseService.supabase
-            .from('machines')
-            .update(values)
-            .eq('id', editing.id)
-            .select()
-        : this.supabaseService.supabase
-            .from('machines')
-            .insert([values])
-            .select();
+      const { error } = editing
+        ? await this.machinesService.update(editing.id, values as never)
+        : await this.machinesService.create(values as never);
 
-      const { error } = await query;
-
-      if (!error) {
-        await this.loadMachines();
-        this.closeModal();
-      }
+      if (!error) this.closeModal();
     } finally {
       this.submitting.set(false);
     }

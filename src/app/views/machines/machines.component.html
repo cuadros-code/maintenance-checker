@@ -2,15 +2,15 @@
   <header class="machines__header">
     <h1 class="machines__title">Equipos</h1>
     <button class="btn btn--primary" type="button" (click)="openModal()">
-      + Nuevo equipo
+      Nuevo equipo
     </button>
   </header>
 
-  @if (loading()) {
+  @if (machinesService.loading()) {
     <div class="machines__status" role="status" aria-live="polite">
       <p>Cargando equipos…</p>
     </div>
-  } @else if (machines().length === 0) {
+  } @else if (machinesService.machines().length === 0) {
     <div class="machines__status" role="status">
       <p>No hay equipos registrados.</p>
     </div>
@@ -28,7 +28,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (machine of machines(); track machine.id) {
+          @for (machine of machinesService.machines(); track machine.id) {
             <tr>
               <td>{{ machine.code }}</td>
               <td>{{ machine.name }}</td>

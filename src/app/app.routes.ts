@@ -24,6 +24,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./views/machines/machines.component').then((m) => m.MachinesComponent),
       },
+      {
+        path: 'mantenimientos',
+        loadComponent: () =>
+          import('./views/maintenance-view/maintenance-view').then((m) => m.MaintenanceView),
+      }
     ],
   },
   { path: '', redirectTo: 'login', pathMatch: 'full' },

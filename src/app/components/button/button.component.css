@@ -1,0 +1,80 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+}
+
+/* Primary */
+.btn--primary {
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.btn--primary:disabled {
+  background-color: #93c5fd;
+}
+
+/* Secondary */
+.btn--secondary {
+  background-color: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background-color: #f9fafb;
+}
+
+.btn--secondary:disabled {
+  opacity: 0.6;
+}
+
+/* Ghost */
+.btn--ghost {
+  background-color: transparent;
+  color: #374151;
+  border: none;
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.btn--ghost:disabled {
+  opacity: 0.6;
+}
+
+/* Icon sizing */
+.btn ::ng-deep svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.icon {
+  width: 10px;
+  height: 10px;
+}
