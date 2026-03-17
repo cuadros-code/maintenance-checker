@@ -7,7 +7,6 @@ import {
 } from '@supabase/supabase-js'
 import { from, map, Observable } from 'rxjs'
 import { supabase } from '../core/supabase'
-import { jwtDecode } from 'jwt-decode';
 
 export interface Profile {
   id?: string

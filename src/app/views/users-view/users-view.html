@@ -1,0 +1,148 @@
+<section class="users">
+  <header class="users__header">
+    <h1 class="users__title">Usuarios</h1>
+    <button class="btn btn--primary" type="button" (click)="openModal()">
+      Nuevo usuario
+    </button>
+  </header>
+
+  @if (usersService.loading()) {
+    <div class="users__status" role="status" aria-live="polite">
+      <p>Cargando usuarios…</p>
+    </div>
+  } @else if (usersService.users().length === 0) {
+    <div class="users__status" role="status">
+      <p>No hay usuarios registrados.</p>
+    </div>
+  } @else {
+    <div class="users__table-wrapper" role="region" aria-label="Lista de usuarios">
+      <table class="users__table">
+        <thead>
+          <tr>
+            <th scope="col">Correo electrónico</th>
+            <th scope="col">Rol</th>
+            <th scope="col">Fecha de registro</th>
+            <th scope="col"><span class="sr-only">Acciones</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of usersService.users(); track user.id) {
+            <tr>
+              <td>{{ user.email }}</td>
+              <td>
+                @if (user.role) {
+                  <span
+                    class="users__badge"
+                    [class.users__badge--admin]="user.role === 'admin'"
+                    [class.users__badge--technician]="user.role === 'technician'"
+                    [class.users__badge--supervisor]="user.role === 'supervisor'"
+                  >
+                    {{ roleLabels[user.role] }}
+                  </span>
+                } @else {
+                  <span class="users__unknown">Sin rol</span>
+                }
+              </td>
+              <td>{{ user.created_at | date: 'dd/MM/yyyy' }}</td>
+              <td class="users__actions-cell">
+                <div class="users__dropdown">
+                  <button
+                    class="users__dropdown-toggle"
+                    type="button"
+                    [attr.aria-expanded]="openDropdownId() === user.id"
+                    [attr.aria-label]="'Acciones para ' + user.email"
+                    (click)="toggleDropdown(user.id, $event)"
+                  >
+                    &#8942;
+                  </button>
+                  @if (openDropdownId() === user.id) {
+                    <ul class="users__dropdown-menu" role="menu">
+                      <li role="none">
+                        <button
+                          class="users__dropdown-item"
+                          type="button"
+                          role="menuitem"
+
+                        >
+                          Editar usuario
+                        </button>
+                      </li>
+                    </ul>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+@if (modalOpen()) {
+  <app-modal title="Nuevo usuario" (closed)="closeModal()">
+    <form class="modal__form" [formGroup]="form" (ngSubmit)="submit()">
+
+      <div class="form-field">
+        <label class="form-field__label" for="email">Correo electrónico</label>
+        <input
+          id="email"
+          class="form-field__input"
+          type="email"
+          formControlName="email"
+          placeholder="usuario@empresa.com"
+          autocomplete="off"
+          [class.form-field__input--error]="form.controls.email.invalid && form.controls.email.touched"
+          aria-describedby="email-error"
+        />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <span class="form-field__error" id="email-error" role="alert">
+            Ingresa un correo electrónico válido.
+          </span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label class="form-field__label" for="password">Contraseña</label>
+        <input
+          id="password"
+          class="form-field__input"
+          type="password"
+          formControlName="password"
+          placeholder="Mínimo 6 caracteres"
+          autocomplete="new-password"
+          [class.form-field__input--error]="form.controls.password.invalid && form.controls.password.touched"
+          aria-describedby="password-error"
+        />
+        @if (form.controls.password.invalid && form.controls.password.touched) {
+          <span class="form-field__error" id="password-error" role="alert">
+            La contraseña debe tener al menos 6 caracteres.
+          </span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label class="form-field__label" for="role">Rol</label>
+        <select
+          id="role"
+          class="form-field__input form-field__select"
+          formControlName="role"
+        >
+          @for (opt of roleOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <footer class="modal__footer">
+        <button class="btn btn--secondary" type="button" (click)="closeModal()">
+          Cancelar
+        </button>
+        <button class="btn btn--primary" type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Guardando…' : 'Crear usuario' }}
+        </button>
+      </footer>
+
+    </form>
+  </app-modal>
+}

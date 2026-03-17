@@ -36,7 +36,7 @@ export class SidebarComponent {
     },
     {
       label: 'Técnicos',
-      route: '/dashboard/tecnicos',
+      route: '/dashboard/usuarios',
       icon: 'groups',
     },
     

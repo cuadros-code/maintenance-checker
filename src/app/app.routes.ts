@@ -28,7 +28,12 @@ export const routes: Routes = [
         path: 'mantenimientos',
         loadComponent: () =>
           import('./views/maintenance-view/maintenance-view').then((m) => m.MaintenanceView),
-      }
+      },
+      {
+        path: 'usuarios',
+        loadComponent: () =>
+          import('./views/users-view/users-view').then((m) => m.UsersView),
+      },
     ],
   },
   { path: '', redirectTo: 'login', pathMatch: 'full' },

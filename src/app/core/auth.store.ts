@@ -30,7 +30,6 @@ export class AuthStore {
   readonly isAdmin = computed(() => this._userRole() === AUTH_ROLES.ADMIN)
 
   constructor() {
-    console.log('Auth Store')
     this.supabase.authChanges().subscribe(({ session }) => {
       this._session.set(session);
       const decoded = session && jwtDecode<JwtPayload>(session ? session?.access_token : '');
