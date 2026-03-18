@@ -30,6 +30,11 @@ export const routes: Routes = [
           import('./views/maintenance-view/maintenance-view').then((m) => m.MaintenanceView),
       },
       {
+        path: 'mantenimientos/:id/tareas',
+        loadComponent: () =>
+          import('./views/maintenance-tasks-view/maintenance-tasks-view').then((m) => m.MaintenanceTasksView),
+      },
+      {
         path: 'usuarios',
         loadComponent: () =>
           import('./views/users-view/users-view').then((m) => m.UsersView),

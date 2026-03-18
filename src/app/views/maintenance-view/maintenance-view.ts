@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { ButtonComponent } from '../../components/button/button.component';
@@ -31,6 +32,7 @@ import {
 })
 export class MaintenanceView {
   private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
   readonly machinesService = inject(MachinesService);
   readonly maintenanceService = inject(MaintenanceService);
   readonly tasksService = inject(MaintenanceTasksService);
@@ -145,6 +147,11 @@ export class MaintenanceView {
 
   closeModal(): void {
     this.modalOpen.set(false);
+  }
+
+  goToTasks(item: Maintenance): void {
+    this.openDropdownId.set(null);
+    this.router.navigate(['/dashboard/mantenimientos', item.id, 'tareas']);
   }
 
   openTasksModal(item: Maintenance): void {

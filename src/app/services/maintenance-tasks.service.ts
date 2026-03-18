@@ -21,6 +21,10 @@ export type MaintenanceTaskPayload = Pick<
   'maintenance_id' | 'title' | 'description' | 'order_index' | 'status' | 'notes'
 >;
 
+export type MaintenanceTaskUpdatePayload = Partial<
+  Pick<MaintenanceTask, 'title' | 'description' | 'status' | 'notes'>
+>;
+
 @Injectable({ providedIn: 'root' })
 export class MaintenanceTasksService {
   private readonly supabaseService = inject(SupabaseService);
@@ -53,6 +57,20 @@ export class MaintenanceTasksService {
       .insert([payload]);
 
     if (!error) await this.loadForMaintenance(payload.maintenance_id);
+    return { error };
+  }
+
+  async update(
+    id: number,
+    payload: MaintenanceTaskUpdatePayload,
+    maintenanceId: number,
+  ): Promise<{ error: unknown }> {
+    const { error } = await this.supabaseService.supabase
+      .from('maintenance_tasks')
+      .update(payload)
+      .eq('id', id);
+
+    if (!error) await this.loadForMaintenance(maintenanceId);
     return { error };
   }
 }
