@@ -35,9 +35,9 @@ export class UsersView {
   };
 
   readonly form = this.fb.group({
-    email   : ['paradesarrollo6@gmail.com', [Validators.required, Validators.email]],
-    password: ['123456', [Validators.required, Validators.minLength(6)]],
-    role    : ['technician' as AppRole, Validators.required],
+    email   : ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    role    : ['' as AppRole, Validators.required],
   });
 
   constructor() {
@@ -45,7 +45,7 @@ export class UsersView {
   }
 
   openModal(): void {
-    // this.form.reset({ role: 'technician' });
+    this.form.reset({ role: 'technician' });
     this.modalOpen.set(true);
   }
 

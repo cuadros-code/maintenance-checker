@@ -13,6 +13,11 @@ import {
   MaintenanceType,
   MaintenanceUpdatePayload,
 } from '../../services/maintenance.service';
+import {
+  MaintenanceTasksService,
+  MaintenanceTaskPayload,
+  TaskStatus,
+} from '../../services/maintenance-tasks.service';
 
 @Component({
   selector: 'app-maintenance-view',
@@ -28,12 +33,17 @@ export class MaintenanceView {
   private readonly fb = inject(FormBuilder);
   readonly machinesService = inject(MachinesService);
   readonly maintenanceService = inject(MaintenanceService);
+  readonly tasksService = inject(MaintenanceTasksService);
   readonly authStore = inject(AuthStore);
 
   readonly modalOpen = signal(false);
   readonly submitting = signal(false);
   readonly editingId = signal<number | null>(null);
   readonly openDropdownId = signal<number | null>(null);
+
+  readonly tasksModalItem = signal<Maintenance | null>(null);
+  readonly tasksModalOpen = computed(() => this.tasksModalItem() !== null);
+  readonly taskSubmitting = signal(false);
 
   readonly isEditing = computed(() => this.editingId() !== null);
   readonly modalTitle = computed(() =>
@@ -70,6 +80,13 @@ export class MaintenanceView {
     cancelled  : 'Cancelado',
   };
 
+  readonly taskStatusLabels: Record<TaskStatus, string> = {
+    pending    : 'Pendiente',
+    in_progress: 'En progreso',
+    completed  : 'Completado',
+    skipped    : 'Omitida',
+  };
+
   readonly machineMap = computed(() =>
     new Map<number, Machine>(this.machinesService.machines().map(m => [m.id, m]))
   );
@@ -82,6 +99,20 @@ export class MaintenanceView {
     scheduled_at   : ['', Validators.required],
     technician_name: [''],
     notes          : [''],
+  });
+
+  readonly taskStatusOptions: { value: TaskStatus; label: string }[] = [
+    { value: 'pending',     label: 'Pendiente' },
+    { value: 'in_progress', label: 'En progreso' },
+    { value: 'completed',   label: 'Completado' },
+    { value: 'skipped',     label: 'Omitida' },
+  ];
+
+  readonly taskForm = this.fb.group({
+    title      : ['', Validators.required],
+    description: [''],
+    status     : ['pending' as TaskStatus, Validators.required],
+    notes      : [''],
   });
 
   readonly minScheduledAt = toLocalDateTimeString(new Date());
@@ -114,6 +145,45 @@ export class MaintenanceView {
 
   closeModal(): void {
     this.modalOpen.set(false);
+  }
+
+  openTasksModal(item: Maintenance): void {
+    this.openDropdownId.set(null);
+    this.tasksModalItem.set(item);
+    this.taskForm.reset({ status: 'pending' });
+    this.tasksService.loadForMaintenance(item.id);
+  }
+
+  closeTasksModal(): void {
+    this.tasksModalItem.set(null);
+  }
+
+  async submitTask(): Promise<void> {
+    if (this.taskForm.invalid) {
+      this.taskForm.markAllAsTouched();
+      return;
+    }
+
+    const item = this.tasksModalItem();
+    if (!item) return;
+
+    this.taskSubmitting.set(true);
+    const raw = this.taskForm.getRawValue();
+
+    try {
+      const payload: MaintenanceTaskPayload = {
+        maintenance_id: item.id,
+        title         : raw.title!,
+        description   : raw.description || null,
+        order_index   : this.tasksService.tasks().length,
+        status        : raw.status as TaskStatus,
+        notes         : raw.notes || null,
+      };
+      const { error } = await this.tasksService.create(payload);
+      if (!error) this.taskForm.reset({ status: 'pending' });
+    } finally {
+      this.taskSubmitting.set(false);
+    }
   }
 
   toggleDropdown(id: number, event: MouseEvent): void {
