@@ -58,7 +58,10 @@
                     &#8942;
                   </button>
                   @if (openDropdownId() === machine.id) {
-                    <ul class="machines__dropdown-menu" role="menu">
+                    <ul class="machines__dropdown-menu" role="menu"
+                      [style.top.px]="dropdownPos()!.top"
+                      [style.right.px]="dropdownPos()!.right"
+                    >
                       <li role="none">
                         <button
                           class="machines__dropdown-item"

@@ -42,6 +42,7 @@ export class MaintenanceView {
   readonly submitting = signal(false);
   readonly editingId = signal<number | null>(null);
   readonly openDropdownId = signal<number | null>(null);
+  readonly dropdownPos = signal<{ top: number; right: number } | null>(null);
 
   readonly tasksModalItem = signal<Maintenance | null>(null);
   readonly tasksModalOpen = computed(() => this.tasksModalItem() !== null);
@@ -195,7 +196,14 @@ export class MaintenanceView {
 
   toggleDropdown(id: number, event: MouseEvent): void {
     event.stopPropagation();
-    this.openDropdownId.update(current => (current === id ? null : id));
+    if (this.openDropdownId() === id) {
+      this.openDropdownId.set(null);
+      this.dropdownPos.set(null);
+    } else {
+      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+      this.dropdownPos.set({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+      this.openDropdownId.set(id);
+    }
   }
 
   onDocumentClick(event: MouseEvent): void {

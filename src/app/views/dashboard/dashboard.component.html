@@ -20,6 +20,9 @@
       <span class="navbar__email" aria-label="Usuario autenticado">
         {{ auth.user()?.email }}
       </span>
+      <span class="navbar__avatar" aria-hidden="true">
+        {{ auth.user()?.email?.[0]?.toUpperCase() ?? '?' }}
+      </span>
       <button
         class="btn btn--logout"
         type="button"

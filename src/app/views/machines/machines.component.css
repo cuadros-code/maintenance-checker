@@ -76,20 +76,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1.5rem;
+  padding: 4rem 1.5rem;
   background: #ffffff;
-  border: 1px dashed #e5e7eb;
-  border-radius: 0.75rem;
-  color: #9ca3af;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  color: #94a3b8;
   font-size: 0.875rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
 
 /* Table */
 .machines__table-wrapper {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
   overflow-x: auto;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .machines__table {
@@ -99,23 +101,30 @@
 }
 
 .machines__table thead {
-  background: #f9fafb;
+  background: #f8fafc;
 }
 
 .machines__table th {
-  padding: 0.75rem 1rem;
+  padding: 0.6875rem 1rem;
   text-align: left;
-  font-weight: 600;
-  color: #374151;
-  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid #e2e8f0;
   white-space: nowrap;
 }
 
 .machines__table td {
-  padding: 0.875rem 1rem;
-  color: #111827;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 0.9375rem 1rem;
+  color: #0f172a;
+  border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
+}
+
+.machines__table tbody tr {
+  transition: background-color 0.12s, box-shadow 0.12s;
 }
 
 .machines__table tbody tr:last-child td {
@@ -123,7 +132,8 @@
 }
 
 .machines__table tbody tr:hover {
-  background: #f9fafb;
+  background: #f8fafc;
+  box-shadow: inset 3px 0 0 #2563eb;
 }
 
 .machines__serial {
@@ -134,11 +144,23 @@
 
 /* Status badges */
 .machines__badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
   padding: 0.25rem 0.625rem;
   border-radius: 9999px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.machines__badge::before {
+  content: '';
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+  opacity: 0.75;
 }
 
 .machines__badge--active {
@@ -274,36 +296,43 @@
 }
 
 .machines__dropdown-menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 0.25rem);
+  position: fixed;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  min-width: 10rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.625rem;
+  box-shadow: 0 10px 20px -4px rgba(15, 23, 42, 0.12), 0 4px 8px -4px rgba(15, 23, 42, 0.08);
+  min-width: 11rem;
   z-index: 999;
-  padding: 0.25rem 0;
+  padding: 0.375rem 0;
   list-style: none;
   margin: 0;
+  animation: dropdownIn 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: scale(0.93) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .machines__dropdown-item {
   display: block;
   width: 100%;
-  padding: 0.5rem 0.875rem;
+  padding: 0.5625rem 1rem;
   background: none;
   border: none;
   text-align: left;
   font-size: 0.875rem;
   font-family: inherit;
-  color: #111827;
+  color: #0f172a;
   cursor: pointer;
   white-space: nowrap;
+  transition: background-color 0.1s, color 0.1s;
 }
 
 .machines__dropdown-item:hover {
-  background: #f9fafb;
+  background: #f1f5f9;
+  color: #2563eb;
 }
 
 .machines__dropdown-item:focus-visible {

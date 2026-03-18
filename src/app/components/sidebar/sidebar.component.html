@@ -11,6 +11,17 @@
   [class.sidebar--open]="open()"
   aria-label="Menú principal"
 >
+  <div class="sidebar__brand" aria-hidden="true">
+    <svg class="sidebar__brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+      <path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+    </svg>
+    <span class="sidebar__brand-name">Revisor.io</span>
+  </div>
+
+  <p class="sidebar__section-label">Navegación</p>
+
   <ul class="sidebar__nav" role="list">
     @for (item of navItems; track item.route) {
       <li>

@@ -25,7 +25,7 @@ export class DashboardComponent {
     this.supabase.signOut().subscribe({
       next: () => {
         this.auth.clear();
-        this.router.navigate(['/login']);
+        this.router.navigate(['/']);
       },
     });
   }

@@ -26,6 +26,7 @@ export class MachinesComponent {
   readonly submitting = signal(false);
   readonly editingMachine = signal<Machine | null>(null);
   readonly openDropdownId = signal<number | null>(null);
+  readonly dropdownPos = signal<{ top: number; right: number } | null>(null);
 
   readonly statusOptions: { value: MachineStatus; label: string }[] = [
     { value: 'active', label: 'Activo' },
@@ -77,7 +78,14 @@ export class MachinesComponent {
 
   toggleDropdown(id: number, event: MouseEvent): void {
     event.stopPropagation();
-    this.openDropdownId.update(current => (current === id ? null : id));
+    if (this.openDropdownId() === id) {
+      this.openDropdownId.set(null);
+      this.dropdownPos.set(null);
+    } else {
+      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+      this.dropdownPos.set({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+      this.openDropdownId.set(id);
+    }
   }
 
   onDocumentClick(event: MouseEvent): void {

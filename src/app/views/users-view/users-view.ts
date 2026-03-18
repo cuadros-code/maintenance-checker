@@ -21,6 +21,7 @@ export class UsersView {
   readonly modalOpen = signal(false);
   readonly submitting = signal(false);
   readonly openDropdownId = signal<string | null>(null);
+  readonly dropdownPos = signal<{ top: number; right: number } | null>(null);
 
   readonly roleOptions: { value: AppRole; label: string }[] = [
     { value: 'admin', label: 'Administrador' },
@@ -55,7 +56,14 @@ export class UsersView {
 
   toggleDropdown(id: string, event: MouseEvent): void {
     event.stopPropagation();
-    this.openDropdownId.update(current => (current === id ? null : id));
+    if (this.openDropdownId() === id) {
+      this.openDropdownId.set(null);
+      this.dropdownPos.set(null);
+    } else {
+      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+      this.dropdownPos.set({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+      this.openDropdownId.set(id);
+    }
   }
 
   onDocumentClick(event: MouseEvent): void {

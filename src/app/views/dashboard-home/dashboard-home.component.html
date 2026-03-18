@@ -1,4 +1,182 @@
 <section class="dashboard-home">
-  <h2 class="dashboard-home__title">Bienvenido</h2>
-  <p class="dashboard-home__subtitle">Selecciona una opción del menú para comenzar.</p>
+  <header class="dashboard-home__header">
+    <h2 class="dashboard-home__title">Panel de control</h2>
+    <p class="dashboard-home__subtitle">Vista general de tus mantenimientos</p>
+  </header>
+
+  @if (loading()) {
+    <div class="skeleton-grid">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="skeleton-card">
+          <div class="skeleton-line skeleton-line--sm"></div>
+          <div class="skeleton-line skeleton-line--lg"></div>
+          <div class="skeleton-line skeleton-line--md"></div>
+        </div>
+      }
+    </div>
+    <div class="charts-grid">
+      <div class="skeleton-card skeleton-card--tall"></div>
+      <div class="skeleton-card skeleton-card--tall"></div>
+    </div>
+  } @else if (total() === 0) {
+    <div class="empty-state">
+      <div class="empty-state__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+          <path d="M9 12h6M9 16h4"/>
+        </svg>
+      </div>
+      <h3 class="empty-state__title">Sin mantenimientos aún</h3>
+      <p class="empty-state__text">Registra tu primer mantenimiento para ver las estadísticas aquí.</p>
+      <a routerLink="/dashboard/maintenances" class="empty-state__cta">Crear mantenimiento</a>
+    </div>
+  } @else {
+    <!-- KPI cards -->
+    <div class="kpi-grid">
+      <article class="kpi-card kpi-card--total">
+        <div class="kpi-card__icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__label">Total</span>
+          <span class="kpi-card__value">{{ total() }}</span>
+        </div>
+      </article>
+
+      <article class="kpi-card kpi-card--pending">
+        <div class="kpi-card__icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__label">Pendientes</span>
+          <span class="kpi-card__value">{{ pending() }}</span>
+        </div>
+      </article>
+
+      <article class="kpi-card kpi-card--progress">
+        <div class="kpi-card__icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__label">En progreso</span>
+          <span class="kpi-card__value">{{ inProgress() }}</span>
+        </div>
+      </article>
+
+      <article class="kpi-card kpi-card--done">
+        <div class="kpi-card__icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__label">Completados</span>
+          <span class="kpi-card__value">{{ completed() }}</span>
+          <span class="kpi-card__rate">{{ completionRate() }}% tasa de éxito</span>
+        </div>
+      </article>
+    </div>
+
+    <!-- Charts row -->
+    <div class="charts-grid">
+      <!-- Donut chart -->
+      <div class="chart-card">
+        <h3 class="chart-card__title">Estado general</h3>
+        <div class="donut-wrapper">
+          <svg class="donut" viewBox="0 0 112 112" aria-label="Gráfico de estado de mantenimientos" role="img">
+            <!-- Track -->
+            <circle
+              cx="56" cy="56" r="44"
+              fill="none"
+              stroke="#e2e8f0"
+              stroke-width="14"
+            />
+            <!-- Segments -->
+            @for (seg of donutSegments(); track seg.key) {
+              <circle
+                cx="56" cy="56" r="44"
+                fill="none"
+                [attr.stroke]="seg.color"
+                stroke-width="14"
+                stroke-linecap="butt"
+                [attr.stroke-dasharray]="seg.dashLen + ' ' + CIRCUMFERENCE"
+                [attr.stroke-dashoffset]="seg.dashOffset"
+                transform="rotate(-90 56 56)"
+              />
+            }
+            <!-- Center label -->
+            <text x="56" y="51" text-anchor="middle" class="donut__center-value">{{ completionRate() }}%</text>
+            <text x="56" y="65" text-anchor="middle" class="donut__center-label">completado</text>
+          </svg>
+
+          <ul class="donut-legend" aria-label="Leyenda">
+            @for (seg of donutSegments(); track seg.key) {
+              <li class="donut-legend__item">
+                <span class="donut-legend__dot" [style.background]="seg.color"></span>
+                <span class="donut-legend__name">{{ seg.label }}</span>
+                <span class="donut-legend__pct">{{ seg.pct }}%</span>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bar chart -->
+      <div class="chart-card">
+        <h3 class="chart-card__title">Por tipo</h3>
+        <div class="bar-chart" role="list" aria-label="Mantenimientos por tipo">
+          @for (stat of typeStats(); track stat.key) {
+            <div class="bar-row" role="listitem">
+              <div class="bar-row__header">
+                <span class="bar-row__label">{{ stat.label }}</span>
+                <span class="bar-row__count">{{ stat.count }}</span>
+              </div>
+              <div class="bar-track" role="progressbar" [attr.aria-valuenow]="stat.pct" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="stat.label + ': ' + stat.count">
+                <div class="bar-fill" [style.background]="stat.color" [style.--pct]="stat.pct + '%'"></div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Cancelled stat -->
+        <div class="chart-card__footer">
+          <span class="chart-footer__label">Cancelados</span>
+          <span class="chart-footer__value">{{ cancelled() }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent maintenances -->
+    <div class="recent-card">
+      <div class="recent-card__header">
+        <h3 class="recent-card__title">Mantenimientos recientes</h3>
+        <a routerLink="/dashboard/mantenimientos" class="recent-card__link">Ver todos →</a>
+      </div>
+
+      <ul class="recent-list" aria-label="Mantenimientos recientes">
+        @for (m of recentMaintenances(); track m.id) {
+          <li class="recent-item">
+            <div class="recent-item__info">
+              <span class="recent-item__machine">{{ machineMap().get(m.machine_id) ?? '—' }}</span>
+              <div class="recent-item__badges">
+                <span [class]="'badge badge--type-' + m.type">{{ typeLabels[m.type] }}</span>
+                <span [class]="'badge badge--status-' + m.status">{{ statusLabels[m.status] }}</span>
+              </div>
+            </div>
+            <time class="recent-item__date" [attr.datetime]="m.scheduled_at">
+              {{ m.scheduled_at | date: 'dd MMM yyyy' }}
+            </time>
+          </li>
+        }
+      </ul>
+    </div>
+  }
 </section>
