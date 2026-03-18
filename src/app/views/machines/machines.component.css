@@ -12,6 +12,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .machines__title {
@@ -87,7 +89,7 @@
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 0.75rem;
-  /* overflow: hidden; */
+  overflow-x: auto;
 }
 
 .machines__table {
@@ -307,4 +309,69 @@
 .machines__dropdown-item:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: -2px;
+}
+
+/* Responsive: card layout on mobile */
+@media (max-width: 640px) {
+  .machines__table-wrapper {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    overflow-x: visible;
+  }
+
+  .machines__table,
+  .machines__table tbody {
+    display: block;
+  }
+
+  .machines__table thead {
+    display: none;
+  }
+
+  .machines__table tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    position: relative;
+  }
+
+  .machines__table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .machines__table tbody tr:hover {
+    background: #f9fafb;
+  }
+
+  .machines__table td {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0;
+    border-bottom: none;
+  }
+
+  .machines__table td[data-label]::before {
+    content: attr(data-label);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .machines__actions-cell {
+    position: absolute;
+    top: 0.875rem;
+    right: 1rem;
+    width: auto;
+    text-align: initial;
+  }
+
+  .machines__actions-cell::before {
+    display: none;
+  }
 }

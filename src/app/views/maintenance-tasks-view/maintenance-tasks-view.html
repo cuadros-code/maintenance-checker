@@ -52,10 +52,10 @@
         <tbody>
           @for (task of tasksService.tasks(); track task.id) {
             <tr>
-              <td class="tv__col-order">{{ task.order_index + 1 }}</td>
-              <td class="tv__col-title">{{ task.title }}</td>
-              <td class="tv__col-desc">{{ task.description || '—' }}</td>
-              <td class="tv__col-status">
+              <td class="tv__col-order" data-label="#">{{ task.order_index + 1 }}</td>
+              <td class="tv__col-title" data-label="Título">{{ task.title }}</td>
+              <td class="tv__col-desc" data-label="Descripción">{{ task.description || '—' }}</td>
+              <td class="tv__col-status" data-label="Estado">
                 <select
                   class="tv__status-select"
                   [class.tv__status-select--pending]="task.status === 'pending'"

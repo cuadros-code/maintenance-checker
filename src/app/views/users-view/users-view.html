@@ -28,8 +28,8 @@
         <tbody>
           @for (user of usersService.users(); track user.id) {
             <tr>
-              <td>{{ user.email }}</td>
-              <td>
+              <td data-label="Correo electrónico">{{ user.email }}</td>
+              <td data-label="Rol">
                 @if (user.role) {
                   <span
                     class="users__badge"
@@ -43,7 +43,7 @@
                   <span class="users__unknown">Sin rol</span>
                 }
               </td>
-              <td>{{ user.created_at | date: 'dd/MM/yyyy' }}</td>
+              <td data-label="Fecha de registro">{{ user.created_at | date: 'dd/MM/yyyy' }}</td>
               <td class="users__actions-cell">
                 <div class="users__dropdown">
                   <button
