@@ -41,6 +41,10 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: '**', redirectTo: 'login' },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./views/landing/landing.component').then((m) => m.LandingComponent),
+  },
+  { path: '**', redirectTo: '' },
 ];
