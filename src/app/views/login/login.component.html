@@ -1,62 +1,140 @@
-<main class="login-container" aria-labelledby="login-title">
-  <div class="login-card">
-    <h1 id="login-title" class="login-title">Iniciar sesión</h1>
+<div class="login-page">
 
-    @if (errorMessage()) {
-      <div class="alert alert--error" role="alert" aria-live="assertive">
-        {{ errorMessage() }}
+  <!-- ── Panel de marca ── -->
+  <aside class="login-brand">
+    <div class="login-brand__inner">
+      <a class="login-brand__logo" [routerLink]="['/']" aria-label="Revisor.io — ir al inicio">
+        <svg width="34" height="34" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+          <rect width="30" height="30" rx="8" fill="#2563eb"/>
+          <path d="M9 15l4.5 4.5 7.5-9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Revisor.io</span>
+      </a>
+
+      <div class="login-brand__body">
+        <h2 class="login-brand__headline">
+          El mantenimiento de tu empresa,
+          <span class="login-brand__gradient"> bajo control</span>
+        </h2>
+        <p class="login-brand__desc">
+          Programa, rastrea y gestiona todos los mantenimientos de tus equipos desde una sola plataforma.
+        </p>
+
+        <ul class="login-brand__features" role="list">
+          <li class="login-brand__feature">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            Seguimiento en tiempo real
+          </li>
+          <li class="login-brand__feature">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            Roles y permisos por equipo
+          </li>
+          <li class="login-brand__feature">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            Historial completo de equipos
+          </li>
+        </ul>
       </div>
-    }
+    </div>
 
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-      <div class="field">
-        <label for="email" class="field__label">Correo electrónico</label>
-        <input
-          id="email"
-          type="email"
-          formControlName="email"
-          class="field__input"
-          [class.field__input--error]="emailInvalid()"
-          autocomplete="email"
-          placeholder="tu@correo.com"
-          aria-required="true"
-          [attr.aria-describedby]="emailInvalid() ? 'email-error' : null"
-        />
-        @if (emailInvalid()) {
-          <span id="email-error" class="field__error" role="alert">
-            Ingresa un correo electrónico válido.
-          </span>
-        }
+    <div class="login-brand__glow" aria-hidden="true"></div>
+    <div class="login-brand__glow login-brand__glow--2" aria-hidden="true"></div>
+  </aside>
+
+  <!-- ── Panel de formulario ── -->
+  <main class="login-form-panel" aria-labelledby="login-title">
+    <div class="login-card">
+
+      <!-- Logo visible sólo en móvil -->
+      <a class="login-card__logo-mobile" [routerLink]="['/']" aria-label="Revisor.io — ir al inicio">
+        <svg width="28" height="28" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+          <rect width="30" height="30" rx="8" fill="#2563eb"/>
+          <path d="M9 15l4.5 4.5 7.5-9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Revisor.io</span>
+      </a>
+
+      <div class="login-card__header">
+        <h1 id="login-title" class="login-title">Iniciar sesión</h1>
+        <p class="login-subtitle">Bienvenido de vuelta</p>
       </div>
 
-      <div class="field">
-        <label for="password" class="field__label">Contraseña</label>
-        <input
-          id="password"
-          type="password"
-          formControlName="password"
-          class="field__input"
-          [class.field__input--error]="passwordInvalid()"
-          autocomplete="current-password"
-          placeholder="••••••••"
-          aria-required="true"
-          [attr.aria-describedby]="passwordInvalid() ? 'password-error' : null"
-        />
-        @if (passwordInvalid()) {
-          <span id="password-error" class="field__error" role="alert">
-            La contraseña es obligatoria.
-          </span>
-        }
-      </div>
+      @if (errorMessage()) {
+        <div class="alert alert--error" role="alert" aria-live="assertive">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ errorMessage() }}
+        </div>
+      }
 
-      <button
-        type="submit"
-        class="btn btn--primary"
-        [disabled]="loading()"
-        [attr.aria-busy]="loading()"
-      >
-        {{ loading() ? 'Ingresando...' : 'Ingresar' }}
-      </button>
-    </form>
-  </div>
-</main>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="field">
+          <label for="email" class="field__label">Correo electrónico</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="field__input"
+            [class.field__input--error]="emailInvalid()"
+            autocomplete="email"
+            placeholder="tu@correo.com"
+            aria-required="true"
+            [attr.aria-describedby]="emailInvalid() ? 'email-error' : null"
+          />
+          @if (emailInvalid()) {
+            <span id="email-error" class="field__error" role="alert">
+              Ingresa un correo electrónico válido.
+            </span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="password" class="field__label">Contraseña</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            class="field__input"
+            [class.field__input--error]="passwordInvalid()"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            aria-required="true"
+            [attr.aria-describedby]="passwordInvalid() ? 'password-error' : null"
+          />
+          @if (passwordInvalid()) {
+            <span id="password-error" class="field__error" role="alert">
+              La contraseña es obligatoria.
+            </span>
+          }
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn--primary"
+          [disabled]="loading()"
+          [attr.aria-busy]="loading()"
+        >
+          @if (loading()) {
+            <svg class="btn__spinner" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+            Ingresando...
+          } @else {
+            Ingresar
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          }
+        </button>
+      </form>
+    </div>
+  </main>
+
+</div>

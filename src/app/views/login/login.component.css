@@ -1,45 +1,172 @@
-.login-container {
+/* ── Layout ── */
+.login-page {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* ── Panel de marca (izquierda) ── */
+.login-brand {
+  position: relative;
+  background-color: #060d1f;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
-  background-color: #f9fafb;
+  padding: 3rem 3.5rem;
+}
+
+.login-brand__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 28rem;
+  width: 100%;
+}
+
+.login-brand__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  text-decoration: none;
+  margin-bottom: 3.5rem;
+}
+
+.login-brand__logo span {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: -0.02em;
+}
+
+.login-brand__headline {
+  font-size: clamp(1.6rem, 2.5vw, 2.1rem);
+  font-weight: 800;
+  color: #f1f5f9;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  margin: 0 0 1rem;
+}
+
+.login-brand__gradient {
+  background: linear-gradient(135deg, #3b82f6, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.login-brand__desc {
+  font-size: 0.9375rem;
+  color: #94a3b8;
+  line-height: 1.65;
+  margin: 0 0 2rem;
+}
+
+.login-brand__features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.login-brand__feature {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.9rem;
+  color: #cbd5e1;
+}
+
+.login-brand__feature svg {
+  flex-shrink: 0;
+  background: rgba(37, 99, 235, 0.15);
+  border-radius: 50%;
+  padding: 3px;
+  box-sizing: content-box;
+}
+
+/* Glows decorativos */
+.login-brand__glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.login-brand__glow:first-of-type {
+  width: 320px;
+  height: 320px;
+  background: rgba(37, 99, 235, 0.18);
+  top: -80px;
+  right: -60px;
+}
+
+.login-brand__glow--2 {
+  width: 260px;
+  height: 260px;
+  background: rgba(129, 140, 248, 0.12);
+  bottom: -60px;
+  left: -40px;
+}
+
+/* ── Panel de formulario (derecha) ── */
+.login-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 2rem;
+  background-color: #f8fafc;
 }
 
 .login-card {
-  background: #ffffff;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  padding: 2.5rem 2rem;
   width: 100%;
-  max-width: 26rem;
+  max-width: 24rem;
+}
+
+/* Logo móvil (oculto en desktop) */
+.login-card__logo-mobile {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  margin-bottom: 2rem;
+}
+
+.login-card__logo-mobile span {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.login-card__header {
+  margin-bottom: 1.75rem;
 }
 
 .login-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 0.5rem;
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+  margin: 0 0 0.25rem;
 }
 
 .login-subtitle {
   font-size: 0.9rem;
-  color: #6b7280;
-  margin: 0 0 1.75rem;
+  color: #64748b;
+  margin: 0;
 }
 
+/* ── Alerta de error ── */
 .alert {
-  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.625rem;
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   margin-bottom: 1.25rem;
-}
-
-.alert--success {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #6ee7b7;
 }
 
 .alert--error {
@@ -48,36 +175,48 @@
   border: 1px solid #fca5a5;
 }
 
+/* ── Campos ── */
 .field {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.125rem;
 }
 
 .field__label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: #334155;
 }
 
 .field__input {
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  padding: 0.625rem 0.875rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.625rem;
+  padding: 0.6875rem 0.875rem;
   font-size: 0.9375rem;
-  color: #111827;
+  font-family: inherit;
+  color: #0f172a;
+  background: #ffffff;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.field__input::placeholder {
+  color: #94a3b8;
 }
 
 .field__input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .field__input--error {
   border-color: #f87171;
+}
+
+.field__input--error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
 }
 
 .field__error {
@@ -85,27 +224,76 @@
   color: #dc2626;
 }
 
+/* ── Botón ── */
 .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   width: 100%;
-  padding: 0.6875rem 1rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 0.625rem;
   font-size: 0.9375rem;
+  font-family: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s, opacity 0.15s;
+  transition: background-color 0.15s, box-shadow 0.15s, opacity 0.15s;
 }
 
 .btn--primary {
-  background-color: #6366f1;
+  background-color: #2563eb;
   color: #ffffff;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
 }
 
 .btn--primary:hover:not(:disabled) {
-  background-color: #4f46e5;
+  background-color: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.btn--primary:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 .btn--primary:disabled {
-  opacity: 0.6;
+  opacity: 0.65;
   cursor: not-allowed;
+}
+
+.btn__spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Responsive: móvil (< 768px) ── */
+@media (max-width: 767px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-brand {
+    display: none;
+  }
+
+  .login-form-panel {
+    align-items: flex-start;
+    padding: 2rem 1.25rem;
+    background-color: #ffffff;
+    min-height: 100vh;
+  }
+
+  .login-card {
+    max-width: 100%;
+    padding-top: 1rem;
+  }
+
+  .login-card__logo-mobile {
+    display: flex;
+  }
 }
