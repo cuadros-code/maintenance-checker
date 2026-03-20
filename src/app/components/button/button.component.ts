@@ -10,6 +10,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       [class.btn--primary]="variant() === 'primary'"
       [class.btn--secondary]="variant() === 'secondary'"
       [class.btn--ghost]="variant() === 'ghost'"
+      [class.btn--danger]="variant() === 'danger'"
       [type]="type()"
       [disabled]="disabled()"
     >
@@ -19,7 +20,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   `,
 })
 export class ButtonComponent {
-  readonly variant = input<'primary' | 'secondary' | 'ghost'>('primary');
+  readonly variant = input<'primary' | 'secondary' | 'ghost' | 'danger'>('primary');
   readonly type = input<'button' | 'submit' | 'reset'>('button');
   readonly disabled = input(false);
 }

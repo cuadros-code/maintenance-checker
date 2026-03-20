@@ -43,6 +43,8 @@ export class MaintenanceView {
   readonly editingId = signal<number | null>(null);
   readonly openDropdownId = signal<number | null>(null);
   readonly dropdownPos = signal<{ top: number; right: number } | null>(null);
+  readonly deleteTargetId = signal<number | null>(null);
+  readonly deleting = signal(false);
 
   readonly tasksModalItem = signal<Maintenance | null>(null);
   readonly tasksModalOpen = computed(() => this.tasksModalItem() !== null);
@@ -148,6 +150,27 @@ export class MaintenanceView {
 
   closeModal(): void {
     this.modalOpen.set(false);
+  }
+
+  openDeleteConfirm(item: Maintenance): void {
+    this.openDropdownId.set(null);
+    this.deleteTargetId.set(item.id);
+  }
+
+  cancelDelete(): void {
+    this.deleteTargetId.set(null);
+  }
+
+  async confirmDelete(): Promise<void> {
+    const id = this.deleteTargetId();
+    if (id === null) return;
+    this.deleting.set(true);
+    try {
+      await this.maintenanceService.delete(id);
+      this.deleteTargetId.set(null);
+    } finally {
+      this.deleting.set(false);
+    }
   }
 
   goToTasks(item: Maintenance): void {

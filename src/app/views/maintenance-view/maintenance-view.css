@@ -393,6 +393,36 @@
   outline-offset: -2px;
 }
 
+.maintenance__dropdown-item--danger {
+  color: #dc2626;
+}
+
+.maintenance__dropdown-item--danger:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.maintenance__dropdown-separator {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 0.25rem 0;
+}
+
+/* Delete confirmation modal */
+.delete-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.delete-confirm__message {
+  font-size: 0.9375rem;
+  color: #374151;
+  line-height: 1.6;
+  margin: 0;
+}
+
 /* Tasks modal */
 .tasks-modal {
   display: flex;

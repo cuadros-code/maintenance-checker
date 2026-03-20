@@ -74,4 +74,21 @@ export class MaintenanceService {
     if (!error) await this.reload();
     return { error };
   }
+
+  async delete(id: number): Promise<{ error: unknown }> {
+    const { error: tasksError } = await this.supabaseService.supabase
+      .from('maintenance_tasks')
+      .delete()
+      .eq('maintenance_id', id);
+
+    if (tasksError) return { error: tasksError };
+
+    const { error } = await this.supabaseService.supabase
+      .from('maintenances')
+      .delete()
+      .eq('id', id);
+
+    if (!error) this._maintenances.update(list => list.filter(m => m.id !== id));
+    return { error };
+  }
 }

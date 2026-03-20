@@ -109,6 +109,19 @@
                           Gestionar tareas
                         </button>
                       </li>
+                      @if (authStore.isAdmin()) {
+                        <li role="separator" class="maintenance__dropdown-separator"></li>
+                        <li role="none">
+                          <button
+                            class="maintenance__dropdown-item maintenance__dropdown-item--danger"
+                            type="button"
+                            role="menuitem"
+                            (click)="openDeleteConfirm(item)"
+                          >
+                            Eliminar mantenimiento
+                          </button>
+                        </li>
+                      }
                     </ul>
                   }
                 </div>
@@ -232,6 +245,24 @@
         </footer>
       </form>
 
+    </div>
+  </app-modal>
+}
+
+@if (deleteTargetId() !== null) {
+  <app-modal title="Eliminar mantenimiento" (closed)="cancelDelete()">
+    <div class="delete-confirm">
+      <p class="delete-confirm__message">
+        ¿Estás seguro de que deseas eliminar este mantenimiento? También se eliminarán todas las tareas asociadas. Esta acción no se puede deshacer.
+      </p>
+      <footer class="mnt-form__footer">
+        <app-button variant="secondary" type="button" (click)="cancelDelete()">
+          Cancelar
+        </app-button>
+        <app-button variant="danger" type="button" [disabled]="deleting()" (click)="confirmDelete()">
+          {{ deleting() ? 'Eliminando…' : 'Eliminar' }}
+        </app-button>
+      </footer>
     </div>
   </app-modal>
 }

@@ -78,6 +78,30 @@
   opacity: 0.6;
 }
 
+/* Danger */
+.btn--danger {
+  background-color: #dc2626;
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 1px 8px rgba(220, 38, 38, 0.3);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background-color: #b91c1c;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn--danger:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(220, 38, 38, 0.25);
+}
+
+.btn--danger:disabled {
+  background-color: #fca5a5;
+  box-shadow: none;
+}
+
 /* Icon sizing */
 .btn ::ng-deep svg {
   width: 1rem;
