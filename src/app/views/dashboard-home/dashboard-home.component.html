@@ -160,18 +160,31 @@
       <h3 class="chart-card__title">Mantenimientos por mes</h3>
       <div class="col-chart" role="list" aria-label="Mantenimientos por mes">
         @for (stat of monthlyStats(); track stat.key) {
-          <div class="col-chart__item" role="listitem" [attr.aria-label]="stat.label + ': ' + stat.count">
-            <span class="col-chart__value" aria-hidden="true">{{ stat.count > 0 ? stat.count : '' }}</span>
+          <div class="col-chart__item" role="listitem"
+            [attr.aria-label]="stat.label + ': ' + stat.count + ' total, ' + stat.completed + ' completados'">
             <div class="col-chart__bar-wrapper">
-              <div
-                class="col-chart__bar"
-                [style.--pct]="stat.pct + '%'"
-                role="presentation"
-              ></div>
+              <div class="col-chart__group">
+                <div class="col-chart__bar-col">
+                  <span class="col-chart__value" aria-hidden="true">{{ stat.count > 0 ? stat.count : '' }}</span>
+                  <div class="col-chart__bar col-chart__bar--total" [style.--pct]="stat.pct + '%'" role="presentation"></div>
+                </div>
+                <div class="col-chart__bar-col">
+                  <span class="col-chart__value col-chart__value--completed" aria-hidden="true">{{ stat.completed > 0 ? stat.completed : '' }}</span>
+                  <div class="col-chart__bar col-chart__bar--completed" [style.--pct]="(stat.count > 0 ? (stat.completed / stat.count) * stat.pct : 0) + '%'" role="presentation"></div>
+                </div>
+              </div>
             </div>
             <span class="col-chart__label">{{ stat.label }}</span>
           </div>
         }
+      </div>
+      <div class="col-chart__legend" aria-hidden="true">
+        <span class="col-chart__legend-item">
+          <span class="col-chart__legend-dot col-chart__legend-dot--other"></span>Total
+        </span>
+        <span class="col-chart__legend-item">
+          <span class="col-chart__legend-dot col-chart__legend-dot--completed"></span>Completados
+        </span>
       </div>
     </div>
 
