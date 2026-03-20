@@ -1,5 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { MaintenanceService } from './maintenance.service';
 
 export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'skipped';
 
@@ -28,6 +29,7 @@ export type MaintenanceTaskUpdatePayload = Partial<
 @Injectable({ providedIn: 'root' })
 export class MaintenanceTasksService {
   private readonly supabaseService = inject(SupabaseService);
+  private readonly maintenanceService = inject(MaintenanceService);
 
   private readonly _tasks = signal<MaintenanceTask[]>([]);
   private readonly _loading = signal(false);
@@ -52,11 +54,16 @@ export class MaintenanceTasksService {
   }
 
   async create(payload: MaintenanceTaskPayload): Promise<{ error: unknown }> {
-    const { error } = await this.supabaseService.supabase
+    const { data, error } = await this.supabaseService.supabase
       .from('maintenance_tasks')
-      .insert([payload]);
+      .insert([payload])
+      .select()
+      .single();
 
-    if (!error) await this.loadForMaintenance(payload.maintenance_id);
+    if (!error && data) {
+      this._tasks.update(list => [...list, data as MaintenanceTask]);
+      this.maintenanceService.adjustTaskCount(payload.maintenance_id, 1);
+    }
     return { error };
   }
 
@@ -65,12 +72,16 @@ export class MaintenanceTasksService {
     payload: MaintenanceTaskUpdatePayload,
     maintenanceId: number,
   ): Promise<{ error: unknown }> {
-    const { error } = await this.supabaseService.supabase
+    const { data, error } = await this.supabaseService.supabase
       .from('maintenance_tasks')
       .update(payload)
-      .eq('id', id);
+      .eq('id', id)
+      .select()
+      .single();
 
-    if (!error) await this.loadForMaintenance(maintenanceId);
+    if (!error && data) {
+      this._tasks.update(list => list.map(t => (t.id === id ? (data as MaintenanceTask) : t)));
+    }
     return { error };
   }
 }

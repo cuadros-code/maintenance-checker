@@ -17,6 +17,7 @@ export interface Maintenance {
   notes: string | null;
   assigned_user_id: string | null;
   created_at: string;
+  task_count: number;
 }
 
 export type MaintenancePayload = Pick<
@@ -25,6 +26,8 @@ export type MaintenancePayload = Pick<
 >;
 
 export type MaintenanceUpdatePayload = MaintenancePayload & Pick<Maintenance, 'status'>;
+
+const MAINTENANCE_SELECT = '*, maintenance_tasks(count)' as const;
 
 @Injectable({ providedIn: 'root' })
 export class MaintenanceService {
@@ -47,10 +50,10 @@ export class MaintenanceService {
     try {
       const { data } = await this.supabaseService.supabase
         .from('maintenances')
-        .select('*')
+        .select(MAINTENANCE_SELECT)
         .order('scheduled_at', { ascending: true });
 
-      this._maintenances.set((data as Maintenance[]) ?? []);
+      this._maintenances.set(this.mapRows((data as unknown[]) ?? []));
       this._loaded = true;
     } finally {
       this._loading.set(false);
@@ -58,22 +61,46 @@ export class MaintenanceService {
   }
 
   async create(payload: MaintenancePayload): Promise<{ error: unknown }> {
-    const { error } = await this.supabaseService.supabase
+    const { data, error } = await this.supabaseService.supabase
       .from('maintenances')
-      .insert([payload]);
+      .insert([payload])
+      .select(MAINTENANCE_SELECT)
+      .single();
 
-    if (!error) await this.reload();
+    if (!error && data) {
+      const record = this.mapRow(data as Record<string, unknown>);
+      this._maintenances.update(list =>
+        [...list, record].sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
+      );
+    }
     return { error };
   }
 
   async update(id: number, payload: MaintenanceUpdatePayload): Promise<{ error: unknown }> {
-    const { error } = await this.supabaseService.supabase
+    const { data, error } = await this.supabaseService.supabase
       .from('maintenances')
       .update(payload)
-      .eq('id', id);
+      .eq('id', id)
+      .select(MAINTENANCE_SELECT)
+      .single();
 
-    if (!error) await this.reload();
+    if (!error && data) {
+      const record = this.mapRow(data as Record<string, unknown>);
+      this._maintenances.update(list =>
+        list
+          .map(m => (m.id === id ? record : m))
+          .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
+      );
+    }
     return { error };
+  }
+
+  adjustTaskCount(maintenanceId: number, delta: 1 | -1): void {
+    this._maintenances.update(list =>
+      list.map(m =>
+        m.id === maintenanceId ? { ...m, task_count: m.task_count + delta } : m
+      )
+    );
   }
 
   async delete(id: number): Promise<{ error: unknown }> {
@@ -91,5 +118,14 @@ export class MaintenanceService {
 
     if (!error) this._maintenances.update(list => list.filter(m => m.id !== id));
     return { error };
+  }
+
+  private mapRow(raw: Record<string, unknown>): Maintenance {
+    const counts = raw['maintenance_tasks'] as { count: number }[] | null;
+    return { ...raw, task_count: counts?.[0]?.count ?? 0 } as Maintenance;
+  }
+
+  private mapRows(rows: unknown[]): Maintenance[] {
+    return rows.map(r => this.mapRow(r as Record<string, unknown>));
   }
 }

@@ -35,7 +35,7 @@ export class MachinesService {
     try {
       const { data } = await this.supabaseService.supabase
         .from('machines')
-        .select('*')
+        .select('id, code, name, location, serial_number, status, created_at')
         .order('status', { ascending: true });
 
       this._machines.set((data as Machine[]) ?? []);
@@ -46,21 +46,35 @@ export class MachinesService {
   }
 
   async create(payload: MachinePayload): Promise<{ error: unknown }> {
-    const { error } = await this.supabaseService.supabase
+    const { data, error } = await this.supabaseService.supabase
       .from('machines')
-      .insert([payload]);
+      .insert([payload])
+      .select('id, code, name, location, serial_number, status, created_at')
+      .single();
 
-    if (!error) await this.reload();
+    if (!error && data) {
+      this._machines.update(list =>
+        [...list, data as Machine].sort((a, b) => a.status.localeCompare(b.status))
+      );
+    }
     return { error };
   }
 
   async update(id: number, payload: MachinePayload): Promise<{ error: unknown }> {
-    const { error } = await this.supabaseService.supabase
+    const { data, error } = await this.supabaseService.supabase
       .from('machines')
       .update(payload)
-      .eq('id', id);
+      .eq('id', id)
+      .select('id, code, name, location, serial_number, status, created_at')
+      .single();
 
-    if (!error) await this.reload();
+    if (!error && data) {
+      this._machines.update(list =>
+        list
+          .map(m => (m.id === id ? (data as Machine) : m))
+          .sort((a, b) => a.status.localeCompare(b.status))
+      );
+    }
     return { error };
   }
 }

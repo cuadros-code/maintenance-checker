@@ -26,6 +26,7 @@
             <th scope="col">Estado</th>
             <th scope="col">Fecha programada</th>
             <th scope="col">Asignado a</th>
+            <th scope="col">Tareas</th>
             <th scope="col"><span class="sr-only">Acciones</span></th>
           </tr>
         </thead>
@@ -64,6 +65,9 @@
               <td data-label="Fecha programada">{{ item.scheduled_at | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td data-label="Asignado a">
                 {{ userMap().get(item.assigned_user_id ?? '')?.email || '—' }}
+              </td>
+              <td data-label="Tareas" class="maintenance__task-count">
+                {{ item.task_count }}
               </td>
               <td class="maintenance__actions-cell">
                 <div class="maintenance__dropdown">
