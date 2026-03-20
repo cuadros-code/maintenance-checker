@@ -78,34 +78,50 @@ export class DashboardHomeComponent implements OnInit {
       .slice(0, 6)
   );
 
+
   readonly monthlyStats = computed(() => {
     const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    const now = new Date();
-    const slots: { key: string; label: string; count: number; completed: number }[] = [];
 
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const sameYear = d.getFullYear() === now.getFullYear();
-      const label = sameYear
-        ? MONTH_NAMES[d.getMonth()]
-        : `${MONTH_NAMES[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`;
-      slots.push({ key, label, count: 0, completed: 0 });
-    }
+    const buildSlots = () => {
+      const now = new Date();
+      return Array.from({ length: 6 }, (_, i) => {
+        const date = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const crossesYear = date.getFullYear() !== now.getFullYear();
+        const label = crossesYear
+          ? `${MONTH_NAMES[date.getMonth()]} '${String(date.getFullYear()).slice(2)}`
+          : MONTH_NAMES[date.getMonth()];
+        return { key, label, count: 0, completed: 0 };
+      });
+  };
 
-    for (const m of this.maintenanceService.maintenances()) {
-      const d = new Date(m.scheduled_at);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const countMaintenancesPerSlot = (
+    slots: ReturnType<typeof buildSlots>,
+    maintenances: typeof this.maintenanceService.maintenances extends () => infer T ? T : never
+  ) => {
+    for (const maintenance of maintenances) {
+      const date = new Date(maintenance.scheduled_at);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const slot = slots.find(s => s.key === key);
-      if (slot) {
-        slot.count++;
-        if (m.status === 'completed') slot.completed++;
-      }
-    }
+      if (!slot) continue;
 
+      slot.count++;
+      if (maintenance.status === 'completed') slot.completed++;
+    }
+  };
+
+  const addPercentages = (slots: ReturnType<typeof buildSlots>) => {
     const max = Math.max(...slots.map(s => s.count), 1);
-    return slots.map(s => ({ ...s, pct: Math.round((s.count / max) * 100) }));
-  });
+    return slots.map(slot => ({
+      ...slot,
+      pct: Math.round((slot.count / max) * 100),
+    }));
+  };
+
+  const slots = buildSlots();
+  countMaintenancesPerSlot(slots, this.maintenanceService.maintenances());
+  return addPercentages(slots);
+});
 
   readonly typeLabels: Record<string, string> = {
     preventive: 'Preventivo',
