@@ -19,6 +19,7 @@ import {
   MaintenanceTaskPayload,
   TaskStatus,
 } from '../../services/maintenance-tasks.service';
+import { UsersService } from '../../services/users.service';
 
 @Component({
   selector: 'app-maintenance-view',
@@ -37,6 +38,7 @@ export class MaintenanceView {
   readonly maintenanceService = inject(MaintenanceService);
   readonly tasksService = inject(MaintenanceTasksService);
   readonly authStore = inject(AuthStore);
+  readonly usersService = inject(UsersService);
 
   readonly modalOpen = signal(false);
   readonly submitting = signal(false);
@@ -96,14 +98,18 @@ export class MaintenanceView {
     new Map<number, Machine>(this.machinesService.machines().map(m => [m.id, m]))
   );
 
+  readonly userMap = computed(() =>
+    new Map(this.usersService.users().map(u => [u.id, u]))
+  );
+
   readonly form = this.fb.group({
-    machine_id     : [null as number | null, Validators.required],
-    type           : ['preventive' as MaintenanceType, Validators.required],
-    status         : ['pending' as MaintenanceStatus, Validators.required],
-    description    : [''],
-    scheduled_at   : ['', Validators.required],
-    technician_name: [''],
-    notes          : [''],
+    machine_id      : [null as number | null, Validators.required],
+    type            : ['preventive' as MaintenanceType, Validators.required],
+    status          : ['pending' as MaintenanceStatus, Validators.required],
+    description     : [''],
+    scheduled_at    : ['', Validators.required],
+    notes           : [''],
+    assigned_user_id: [null as string | null],
   });
 
   readonly taskStatusOptions: { value: TaskStatus; label: string }[] = [
@@ -125,6 +131,7 @@ export class MaintenanceView {
   constructor() {
     this.machinesService.load();
     this.maintenanceService.load();
+    this.usersService.load();
   }
 
   openModal(): void {
@@ -137,13 +144,13 @@ export class MaintenanceView {
     this.editingId.set(item.id);
     this.openDropdownId.set(null);
     this.form.reset({
-      machine_id     : item.machine_id,
-      type           : item.type,
-      status         : item.status,
-      description    : item.description ?? '',
-      scheduled_at   : toLocalDateTimeString(new Date(item.scheduled_at)),
-      technician_name: item.technician_name ?? '',
-      notes          : item.notes ?? '',
+      machine_id      : item.machine_id,
+      type            : item.type,
+      status          : item.status,
+      description     : item.description ?? '',
+      scheduled_at    : toLocalDateTimeString(new Date(item.scheduled_at)),
+      notes           : item.notes ?? '',
+      assigned_user_id: item.assigned_user_id ?? null,
     });
     this.modalOpen.set(true);
   }
@@ -249,24 +256,24 @@ export class MaintenanceView {
       const id = this.editingId();
       if (id !== null) {
         const payload: MaintenanceUpdatePayload = {
-          machine_id     : raw.machine_id!,
-          type           : raw.type as MaintenanceType,
-          status         : raw.status as MaintenanceStatus,
-          description    : raw.description || null,
-          scheduled_at   : new Date(raw.scheduled_at!).toISOString(),
-          technician_name: raw.technician_name || null,
-          notes          : raw.notes || null,
+          machine_id      : raw.machine_id!,
+          type            : raw.type as MaintenanceType,
+          status          : raw.status as MaintenanceStatus,
+          description     : raw.description || null,
+          scheduled_at    : new Date(raw.scheduled_at!).toISOString(),
+          notes           : raw.notes || null,
+          assigned_user_id: raw.assigned_user_id || null,
         };
         const { error } = await this.maintenanceService.update(id, payload);
         if (!error) this.closeModal();
       } else {
         const payload: MaintenancePayload = {
-          machine_id     : raw.machine_id!,
-          type           : raw.type as MaintenanceType,
-          description    : raw.description || null,
-          scheduled_at   : new Date(raw.scheduled_at!).toISOString(),
-          technician_name: raw.technician_name || null,
-          notes          : raw.notes || null,
+          machine_id      : raw.machine_id!,
+          type            : raw.type as MaintenanceType,
+          description     : raw.description || null,
+          scheduled_at    : new Date(raw.scheduled_at!).toISOString(),
+          notes           : raw.notes || null,
+          assigned_user_id: raw.assigned_user_id || null,
         };
         const { error } = await this.maintenanceService.create(payload);
         if (!error) this.closeModal();

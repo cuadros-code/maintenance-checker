@@ -18,6 +18,7 @@
       <div class="skeleton-card skeleton-card--tall"></div>
       <div class="skeleton-card skeleton-card--tall"></div>
     </div>
+    <div class="skeleton-card skeleton-card--tall"></div>
   } @else if (total() === 0) {
     <div class="empty-state">
       <div class="empty-state__icon">
@@ -151,6 +152,26 @@
           <span class="chart-footer__label">Cancelados</span>
           <span class="chart-footer__value">{{ cancelled() }}</span>
         </div>
+      </div>
+    </div>
+
+    <!-- Monthly bar chart -->
+    <div class="chart-card">
+      <h3 class="chart-card__title">Mantenimientos por mes</h3>
+      <div class="col-chart" role="list" aria-label="Mantenimientos por mes">
+        @for (stat of monthlyStats(); track stat.key) {
+          <div class="col-chart__item" role="listitem" [attr.aria-label]="stat.label + ': ' + stat.count">
+            <span class="col-chart__value" aria-hidden="true">{{ stat.count > 0 ? stat.count : '' }}</span>
+            <div class="col-chart__bar-wrapper">
+              <div
+                class="col-chart__bar"
+                [style.--pct]="stat.pct + '%'"
+                role="presentation"
+              ></div>
+            </div>
+            <span class="col-chart__label">{{ stat.label }}</span>
+          </div>
+        }
       </div>
     </div>
 

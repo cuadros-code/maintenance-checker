@@ -236,6 +236,11 @@
   color: #ef4444;
 }
 
+.form-field__hint {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
 /* Actions column */
 .maintenance__actions-cell {
   width: 3rem;

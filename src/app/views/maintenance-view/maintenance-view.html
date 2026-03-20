@@ -25,7 +25,7 @@
             <th scope="col">Tipo</th>
             <th scope="col">Estado</th>
             <th scope="col">Fecha programada</th>
-            <th scope="col">Técnico</th>
+            <th scope="col">Asignado a</th>
             <th scope="col"><span class="sr-only">Acciones</span></th>
           </tr>
         </thead>
@@ -62,7 +62,9 @@
                 </span>
               </td>
               <td data-label="Fecha programada">{{ item.scheduled_at | date: 'dd/MM/yyyy HH:mm' }}</td>
-              <td data-label="Técnico">{{ item.technician_name || '—' }}</td>
+              <td data-label="Asignado a">
+                {{ userMap().get(item.assigned_user_id ?? '')?.email || '—' }}
+              </td>
               <td class="maintenance__actions-cell">
                 <div class="maintenance__dropdown">
                   <button
@@ -339,16 +341,23 @@
       </div>
 
       <div class="form-field">
-        <label class="form-field__label" for="technician_name">Técnico responsable</label>
-        <input
-          id="technician_name"
-          class="form-field__input"
-          type="text"
-          formControlName="technician_name"
-          placeholder="Ej. Carlos Ramírez"
-          autocomplete="off"
-        />
+        <label class="form-field__label" for="assigned_user_id">Usuario asignado</label>
+        <select
+          id="assigned_user_id"
+          class="form-field__input form-field__select"
+          formControlName="assigned_user_id"
+          [attr.aria-busy]="usersService.loading()"
+        >
+          <option [value]="null">Sin asignar</option>
+          @for (user of usersService.users(); track user.id) {
+            <option [value]="user.id">{{ user.email }}</option>
+          }
+        </select>
+        @if (usersService.loading()) {
+          <span class="form-field__hint">Cargando usuarios…</span>
+        }
       </div>
+
 
       <div class="form-field">
         <label class="form-field__label" for="description">Descripción</label>

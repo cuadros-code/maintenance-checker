@@ -78,6 +78,32 @@ export class DashboardHomeComponent implements OnInit {
       .slice(0, 6)
   );
 
+  readonly monthlyStats = computed(() => {
+    const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const now = new Date();
+    const slots: { key: string; label: string; count: number }[] = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const sameYear = d.getFullYear() === now.getFullYear();
+      const label = sameYear
+        ? MONTH_NAMES[d.getMonth()]
+        : `${MONTH_NAMES[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`;
+      slots.push({ key, label, count: 0 });
+    }
+
+    for (const m of this.maintenanceService.maintenances()) {
+      const d = new Date(m.scheduled_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const slot = slots.find(s => s.key === key);
+      if (slot) slot.count++;
+    }
+
+    const max = Math.max(...slots.map(s => s.count), 1);
+    return slots.map(s => ({ ...s, pct: Math.round((s.count / max) * 100) }));
+  });
+
   readonly typeLabels: Record<string, string> = {
     preventive: 'Preventivo',
     corrective:  'Correctivo',

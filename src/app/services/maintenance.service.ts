@@ -15,12 +15,13 @@ export interface Maintenance {
   status: MaintenanceStatus;
   technician_name: string | null;
   notes: string | null;
+  assigned_user_id: string | null;
   created_at: string;
 }
 
 export type MaintenancePayload = Pick<
   Maintenance,
-  'machine_id' | 'type' | 'description' | 'scheduled_at' | 'technician_name' | 'notes'
+  'machine_id' | 'type' | 'description' | 'scheduled_at' | 'notes' | 'assigned_user_id'
 >;
 
 export type MaintenanceUpdatePayload = MaintenancePayload & Pick<Maintenance, 'status'>;
