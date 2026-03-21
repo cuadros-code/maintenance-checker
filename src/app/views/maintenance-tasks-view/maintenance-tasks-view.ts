@@ -66,6 +66,25 @@ export class MaintenanceTasksView {
     { value: 'skipped',     label: 'Omitida' },
   ];
 
+  readonly columns: { status: TaskStatus; label: string }[] = [
+    { status: 'pending',     label: 'Pendiente'   },
+    { status: 'in_progress', label: 'En progreso' },
+    { status: 'completed',   label: 'Completado'  },
+    { status: 'skipped',     label: 'Omitida'     },
+  ];
+
+  readonly tasksByStatus = computed(() => {
+    const tasks = this.tasksService.tasks();
+    const map: Record<TaskStatus, MaintenanceTask[]> = {
+      pending:     [],
+      in_progress: [],
+      completed:   [],
+      skipped:     [],
+    };
+    for (const t of tasks) map[t.status].push(t);
+    return map;
+  });
+
   readonly typeLabels: Record<MaintenanceType, string> = {
     preventive: 'Preventivo',
     corrective: 'Correctivo',
@@ -97,8 +116,6 @@ export class MaintenanceTasksView {
       this.closeLightbox();
     }
   }
-
-  // ── Edit ──────────────────────────────────────────────────────────────────
 
   openEditModal(task: MaintenanceTask): void {
     this.editingTask.set(task);
@@ -143,7 +160,6 @@ export class MaintenanceTasksView {
     await this.tasksService.update(task.id, { status }, this.maintenanceId);
   }
 
-  // ── Add ───────────────────────────────────────────────────────────────────
 
   openAddModal(): void {
     this.addForm.reset({ status: 'pending' });
@@ -177,8 +193,6 @@ export class MaintenanceTasksView {
     }
   }
 
-  // ── Images ────────────────────────────────────────────────────────────────
-
   openImagesModal(task: MaintenanceTask): void {
     this.imagesModalTask.set(task);
     this.pendingFiles.set([]);
@@ -194,8 +208,6 @@ export class MaintenanceTasksView {
     this.pendingPreviews.set([]);
   }
 
-  // ── Lightbox ──────────────────────────────────────────────────────────────
-
   openLightbox(url: string): void {
     this.lightboxUrl.set(url);
   }
@@ -203,8 +215,6 @@ export class MaintenanceTasksView {
   closeLightbox(): void {
     this.lightboxUrl.set(null);
   }
-
-  // ── File upload ───────────────────────────────────────────────────────────
 
   onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;

@@ -39,20 +39,16 @@ export class ImageCompressService {
     })
   }
 
-  // Intenta WebP via WASM → canvas WebP → JPEG (cadena de fallbacks)
   private async toWebP(file: File, quality: number): Promise<File> {
     const imageData = await this.getImageData(file)
 
-    // 1. WASM encoder — funciona en cualquier dispositivo si el .wasm carga correctamente
     try {
       const { default: encode } = await import('@jsquash/webp/encode')
       const bytes = await encode(imageData, { quality: Math.round(quality * 100) })
       return new File([bytes], file.name.replace(/\.\w+$/, '.webp'), { type: 'image/webp' })
     } catch {
-      // WASM no disponible (MIME type incorrecto, iOS restrictivo, etc.)
     }
 
-    // 2. Canvas WebP — funciona en iOS 16+, Chrome, Firefox
     const canvas  = document.createElement('canvas')
     canvas.width  = imageData.width
     canvas.height = imageData.height
@@ -73,13 +69,11 @@ export class ImageCompressService {
   }
 
   async compress(file: File, onProgress?: (p: number) => void): Promise<File> {
-    // 1. Convertir HEIC → JPEG (fotos iPhone en formato original)
     let source = file
     if (this.isHeic(file)) {
       try { source = await this.convertHeic(file) } catch { /* mantener original */ }
     }
 
-    // 2. Redimensionar y reducir peso (paso independiente)
     let resized = source
     try {
       resized = await imageCompression(source, {
@@ -93,8 +87,6 @@ export class ImageCompressService {
       // imageCompression falló — continuar con source para al menos convertir formato
     }
 
-    // 3. Convertir a WebP (o JPEG si WebP no está disponible)
-    // Si este paso falla, devolvemos lo que tengamos — nunca el archivo original sin comprimir
     try {
       return await this.toWebP(resized, 0.75)
     } catch {

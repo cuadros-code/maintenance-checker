@@ -54,71 +54,85 @@
       <p>No hay tareas registradas para este mantenimiento.</p>
     </div>
   } @else {
-    <div class="tv__cards" role="list" aria-label="Lista de tareas">
-      @for (task of tasksService.tasks(); track task.id) {
-        <article class="tv__card" role="listitem">
-          <span class="tv__card-num" aria-hidden="true">{{ task.order_index + 1 }}</span>
+    <div class="tv__board" role="region" aria-label="Tablero de tareas">
+      @for (col of columns; track col.status) {
+        <div class="tv__col tv__col--{{ col.status }}" role="group" [attr.aria-label]="col.label">
 
-          <div class="tv__card-content">
-            <div class="tv__card-top">
-              <h2 class="tv__card-title">{{ task.title }}</h2>
-              <select
-                class="tv__status-select"
-                [class.tv__status-select--pending]="task.status === 'pending'"
-                [class.tv__status-select--in-progress]="task.status === 'in_progress'"
-                [class.tv__status-select--completed]="task.status === 'completed'"
-                [class.tv__status-select--skipped]="task.status === 'skipped'"
-                [attr.aria-label]="'Estado de ' + task.title"
-                (change)="onStatusChange(task, $event)"
-              >
-                @for (opt of taskStatusOptions; track opt.value) {
-                  <option [value]="opt.value" [selected]="task.status === opt.value">{{ opt.label }}</option>
+          <div class="tv__col-header">
+            <span class="tv__col-dot" aria-hidden="true"></span>
+            <h2 class="tv__col-title">{{ col.label }}</h2>
+            <span class="tv__col-count" aria-label="{{ tasksByStatus()[col.status].length }} tareas">
+              {{ tasksByStatus()[col.status].length }}
+            </span>
+          </div>
+
+          <div class="tv__col-body">
+            @for (task of tasksByStatus()[col.status]; track task.id) {
+              <article class="tv__card">
+                <div class="tv__card-header">
+                  <span class="tv__card-num" aria-hidden="true">#{{ task.order_index + 1 }}</span>
+                  <div class="tv__card-btns">
+                    <button
+                      class="tv__icon-btn"
+                      type="button"
+                      [attr.aria-label]="'Imágenes de ' + task.title"
+                      (click)="openImagesModal(task)"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <rect x="2" y="5" width="20" height="15" rx="2" stroke="currentColor" stroke-width="1.75"/>
+                        <circle cx="8.5" cy="11.5" r="2" stroke="currentColor" stroke-width="1.75"/>
+                        <path d="M14 10l3 4H7l3-3" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 5l1-2h6l1 2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <button
+                      class="tv__icon-btn"
+                      type="button"
+                      [attr.aria-label]="'Editar ' + task.title"
+                      (click)="openEditModal(task)"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M16 3l5 5L7 22H2v-5L16 3z" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <h3 class="tv__card-title">{{ task.title }}</h3>
+
+                @if (task.description) {
+                  <p class="tv__card-desc">{{ task.description }}</p>
                 }
-              </select>
-            </div>
 
-            @if (task.description) {
-              <p class="tv__card-desc">{{ task.description }}</p>
+                @if (task.notes) {
+                  <p class="tv__card-notes">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 6v5m0-7v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    {{ task.notes }}
+                  </p>
+                }
+
+                <div class="tv__card-footer">
+                  <select
+                    class="tv__status-select tv__status-select--{{ task.status }}"
+                    [attr.aria-label]="'Mover ' + task.title + ' a'"
+                    (change)="onStatusChange(task, $event)"
+                  >
+                    @for (opt of taskStatusOptions; track opt.value) {
+                      <option [value]="opt.value" [selected]="task.status === opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
+              </article>
             }
 
-            @if (task.notes) {
-              <p class="tv__card-notes">
-                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 6v5m0-7v1" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-                {{ task.notes }}
-              </p>
+            @if (tasksByStatus()[col.status].length === 0) {
+              <div class="tv__col-empty" aria-hidden="true">Sin tareas</div>
             }
           </div>
 
-          <div class="tv__card-actions">
-            <button
-              class="tv__action-btn tv__action-btn--images"
-              type="button"
-              [attr.aria-label]="'Ver imágenes de ' + task.title"
-              (click)="openImagesModal(task)"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <rect x="2" y="5" width="20" height="15" rx="2" stroke="currentColor" stroke-width="1.75"/>
-                <circle cx="8.5" cy="11.5" r="2" stroke="currentColor" stroke-width="1.75"/>
-                <path d="M14 10l3 4H7l3-3" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M8 5l1-2h6l1 2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Imágenes
-            </button>
-            <button
-              class="tv__action-btn tv__action-btn--edit"
-              type="button"
-              [attr.aria-label]="'Editar tarea ' + task.title"
-              (click)="openEditModal(task)"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M16 3l5 5L7 22H2v-5L16 3z" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Editar
-            </button>
-          </div>
-        </article>
+        </div>
       }
     </div>
   }
