@@ -13,6 +13,7 @@ import {
   MaintenanceTasksService,
   TaskStatus,
 } from '../../services/maintenance-tasks.service';
+import { TaskImagesService } from '../../services/task-images.service';
 
 @Component({
   selector: 'app-maintenance-tasks-view',
@@ -25,6 +26,7 @@ export class MaintenanceTasksView {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   readonly tasksService = inject(MaintenanceTasksService);
+  readonly imagesService = inject(TaskImagesService);
   private readonly maintenanceService = inject(MaintenanceService);
   private readonly machinesService = inject(MachinesService);
 
@@ -46,6 +48,10 @@ export class MaintenanceTasksView {
 
   readonly addModalOpen = signal(false);
   readonly addSubmitting = signal(false);
+
+  readonly imagesModalTask = signal<MaintenanceTask | null>(null);
+  readonly imagesModalOpen = computed(() => this.imagesModalTask() !== null);
+  readonly pendingFiles = signal<File[]>([]);
 
   readonly taskStatusOptions: { value: TaskStatus; label: string }[] = [
     { value: 'pending',     label: 'Pendiente' },
@@ -152,6 +158,39 @@ export class MaintenanceTasksView {
       if (!error) this.closeAddModal();
     } finally {
       this.addSubmitting.set(false);
+    }
+  }
+
+  openImagesModal(task: MaintenanceTask): void {
+    this.imagesModalTask.set(task);
+    this.pendingFiles.set([]);
+    this.imagesService.loadForTask(task.id);
+  }
+
+  closeImagesModal(): void {
+    this.imagesModalTask.set(null);
+    this.pendingFiles.set([]);
+  }
+
+  onFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    this.pendingFiles.update(prev => [...prev, ...files]);
+    input.value = '';
+  }
+
+  removePendingFile(index: number): void {
+    this.pendingFiles.update(files => files.filter((_, i) => i !== index));
+  }
+
+  async uploadImages(): Promise<void> {
+    const task = this.imagesModalTask();
+    const files = this.pendingFiles();
+    if (!task || files.length === 0) return;
+
+    const { failedCount } = await this.imagesService.upload(task.id, files);
+    if (failedCount === 0) {
+      this.pendingFiles.set([]);
     }
   }
 }

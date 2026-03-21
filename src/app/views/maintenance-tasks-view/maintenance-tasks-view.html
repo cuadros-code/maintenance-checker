@@ -74,12 +74,20 @@
               </td>
               <td class="tv__col-actions">
                 <button
-                  class="tv__edit-btn"
+                  class="tv__action-btn"
                   type="button"
                   [attr.aria-label]="'Editar tarea ' + task.title"
                   (click)="openEditModal(task)"
                 >
                   Editar
+                </button>
+                <button
+                  class="tv__action-btn tv__action-btn--images"
+                  type="button"
+                  [attr.aria-label]="'Ver imágenes de ' + task.title"
+                  (click)="openImagesModal(task)"
+                >
+                  Imágenes
                 </button>
               </td>
             </tr>
@@ -219,5 +227,88 @@
       </footer>
 
     </form>
+  </app-modal>
+}
+
+@if (imagesModalOpen()) {
+  <app-modal
+    [title]="'Imágenes — ' + imagesModalTask()!.title"
+    (closed)="closeImagesModal()"
+  >
+    <div class="img-modal">
+
+      @if (imagesService.loading()) {
+        <p class="img-modal__loading" role="status" aria-live="polite">Cargando imágenes…</p>
+      } @else if (imagesService.images().length === 0) {
+        <p class="img-modal__empty">No hay imágenes para esta tarea.</p>
+      } @else {
+        <ul class="img-modal__gallery" aria-label="Imágenes de la tarea">
+          @for (img of imagesService.images(); track img.id) {
+            <li class="img-modal__gallery-item">
+              <a [href]="img.url" target="_blank" rel="noopener noreferrer" class="img-modal__thumb-link" [attr.aria-label]="'Ver imagen ' + $index">
+                <img [src]="img.url" alt="" class="img-modal__thumb" loading="lazy" />
+              </a>
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="img-modal__upload-section">
+        <p class="img-modal__upload-label">Agregar imágenes</p>
+
+        <label class="img-modal__file-label" for="img_file_input">
+          Seleccionar archivos
+          <input
+            id="img_file_input"
+            type="file"
+            accept="image/*"
+            multiple
+            class="sr-only"
+            (change)="onFilesSelected($event)"
+          />
+        </label>
+
+        @if (pendingFiles().length > 0) {
+          <ul class="img-modal__pending" aria-label="Archivos seleccionados">
+            @for (file of pendingFiles(); track $index) {
+              <li class="img-modal__pending-item">
+                <span class="img-modal__file-name">{{ file.name }}</span>
+                <button
+                  class="img-modal__remove-btn"
+                  type="button"
+                  [attr.aria-label]="'Quitar ' + file.name"
+                  (click)="removePendingFile($index)"
+                >
+                  &times;
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (imagesService.uploadError()) {
+          <p class="img-modal__error" role="alert">{{ imagesService.uploadError() }}</p>
+        }
+      </div>
+
+      <footer class="img-modal__footer">
+        <app-button variant="secondary" type="button" (click)="closeImagesModal()">
+          Cerrar
+        </app-button>
+        <app-button
+          variant="primary"
+          type="button"
+          [disabled]="imagesService.uploading() || pendingFiles().length === 0"
+          (click)="uploadImages()"
+        >
+          @if (imagesService.uploading()) {
+            Subiendo…
+          } @else {
+            Subir {{ pendingFiles().length }} imagen{{ pendingFiles().length !== 1 ? 'es' : '' }}
+          }
+        </app-button>
+      </footer>
+
+    </div>
   </app-modal>
 }
