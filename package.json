@@ -20,6 +20,8 @@
     "@angular/service-worker": "^21.2.1",
     "@ngx-env/builder": "^21.0.1",
     "@supabase/supabase-js": "^2.98.0",
+    "browser-image-compression": "^2.0.2",
+    "heic2any": "^0.0.4",
     "jwt-decode": "^4.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"

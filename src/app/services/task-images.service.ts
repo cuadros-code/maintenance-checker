@@ -1,8 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { AuthStore } from '../core/auth.store';
-import { compressImage } from '../utils/image-compress.util';
-
+import { ImageCompressService } from '../utils/image-compress.util';
 export interface TaskImage {
   id: number;
   task_id: number;
@@ -17,6 +16,7 @@ export interface TaskImage {
 export class TaskImagesService {
   private readonly supabaseService = inject(SupabaseService);
   private readonly authStore = inject(AuthStore);
+  private compressService = inject(ImageCompressService)
 
   private readonly _images = signal<TaskImage[]>([]);
   private readonly _loading = signal(false);
@@ -52,7 +52,16 @@ export class TaskImagesService {
 
     try {
       for (const file of files) {
-        const compressed = await compressImage(file)
+        let compressed: File
+
+        try {
+          compressed = await this.compressService.compress(file, (p) => {
+            console.log(`Comprimiendo ${file.name}: ${p}%`)
+          })
+          this.compressService.logStats(file, compressed)
+        } catch {
+          compressed = file // fallback al original si falla
+        }
 
         const formData = new FormData()
         formData.append('image', compressed)
