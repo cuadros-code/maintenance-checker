@@ -2,8 +2,12 @@
   <header class="tv__header">
     <div class="tv__header-start">
       <a class="tv__back" [routerLink]="['/dashboard/mantenimientos']" aria-label="Volver a mantenimientos">
-        &#8592; Mantenimientos
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Mantenimientos
       </a>
+      <span class="tv__header-sep" aria-hidden="true">/</span>
       <h1 class="tv__title">Tareas</h1>
     </div>
 
@@ -26,78 +30,101 @@
       </div>
     }
 
-    <app-button (click)="openAddModal()">Nueva tarea</app-button>
+    <app-button (click)="openAddModal()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style="margin-right: 0.375rem">
+        <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Nueva tarea
+    </app-button>
   </header>
 
   @if (tasksService.loading()) {
     <div class="tv__status" role="status" aria-live="polite">
+      <div class="tv__spinner" aria-hidden="true"></div>
       <p>Cargando tareas…</p>
     </div>
   } @else if (tasksService.tasks().length === 0) {
-    <div class="tv__status" role="status">
+    <div class="tv__status tv__status--empty" role="status">
+      <svg class="tv__empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="16" rx="2" stroke="#d1d5db" stroke-width="1.5"/>
+        <path d="M3 10h18" stroke="#d1d5db" stroke-width="1.5"/>
+        <path d="M8 3v4M16 3v4" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M8 15h8M8 18h5" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
       <p>No hay tareas registradas para este mantenimiento.</p>
     </div>
   } @else {
-    <div class="tv__table-wrapper" role="region" aria-label="Lista de tareas">
-      <table class="tv__table">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Título</th>
-            <th scope="col">Descripción</th>
-            <th scope="col">Estado</th>
-            <th scope="col"><span class="sr-only">Acciones</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (task of tasksService.tasks(); track task.id) {
-            <tr>
-              <td class="tv__col-order" data-label="#">{{ task.order_index + 1 }}</td>
-              <td class="tv__col-title" data-label="Título">{{ task.title }}</td>
-              <td class="tv__col-desc" data-label="Descripción">{{ task.description || '—' }}</td>
-              <td class="tv__col-status" data-label="Estado">
-                <select
-                  class="tv__status-select"
-                  [class.tv__status-select--pending]="task.status === 'pending'"
-                  [class.tv__status-select--in-progress]="task.status === 'in_progress'"
-                  [class.tv__status-select--completed]="task.status === 'completed'"
-                  [class.tv__status-select--skipped]="task.status === 'skipped'"
-                  [attr.aria-label]="'Estado de ' + task.title"
-                  (change)="onStatusChange(task, $event)"
-                >
-                  @for (opt of taskStatusOptions; track opt.value) {
-                    <option [value]="opt.value" [selected]="task.status === opt.value">
-                      {{ opt.label }}
-                    </option>
-                  }
-                </select>
-              </td>
-              <td class="tv__col-actions">
-                <button
-                  class="tv__action-btn"
-                  type="button"
-                  [attr.aria-label]="'Editar tarea ' + task.title"
-                  (click)="openEditModal(task)"
-                >
-                  Editar
-                </button>
-                <button
-                  class="tv__action-btn tv__action-btn--images"
-                  type="button"
-                  [attr.aria-label]="'Ver imágenes de ' + task.title"
-                  (click)="openImagesModal(task)"
-                >
-                  Imágenes
-                </button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    <div class="tv__cards" role="list" aria-label="Lista de tareas">
+      @for (task of tasksService.tasks(); track task.id) {
+        <article class="tv__card" role="listitem">
+          <span class="tv__card-num" aria-hidden="true">{{ task.order_index + 1 }}</span>
+
+          <div class="tv__card-content">
+            <div class="tv__card-top">
+              <h2 class="tv__card-title">{{ task.title }}</h2>
+              <select
+                class="tv__status-select"
+                [class.tv__status-select--pending]="task.status === 'pending'"
+                [class.tv__status-select--in-progress]="task.status === 'in_progress'"
+                [class.tv__status-select--completed]="task.status === 'completed'"
+                [class.tv__status-select--skipped]="task.status === 'skipped'"
+                [attr.aria-label]="'Estado de ' + task.title"
+                (change)="onStatusChange(task, $event)"
+              >
+                @for (opt of taskStatusOptions; track opt.value) {
+                  <option [value]="opt.value" [selected]="task.status === opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+
+            @if (task.description) {
+              <p class="tv__card-desc">{{ task.description }}</p>
+            }
+
+            @if (task.notes) {
+              <p class="tv__card-notes">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 6v5m0-7v1" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                {{ task.notes }}
+              </p>
+            }
+          </div>
+
+          <div class="tv__card-actions">
+            <button
+              class="tv__action-btn tv__action-btn--images"
+              type="button"
+              [attr.aria-label]="'Ver imágenes de ' + task.title"
+              (click)="openImagesModal(task)"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="2" y="5" width="20" height="15" rx="2" stroke="currentColor" stroke-width="1.75"/>
+                <circle cx="8.5" cy="11.5" r="2" stroke="currentColor" stroke-width="1.75"/>
+                <path d="M14 10l3 4H7l3-3" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 5l1-2h6l1 2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Imágenes
+            </button>
+            <button
+              class="tv__action-btn tv__action-btn--edit"
+              type="button"
+              [attr.aria-label]="'Editar tarea ' + task.title"
+              (click)="openEditModal(task)"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M16 3l5 5L7 22H2v-5L16 3z" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Editar
+            </button>
+          </div>
+        </article>
+      }
     </div>
   }
 </section>
 
+<!-- ── Edit modal ──────────────────────────────────────────────────────── -->
 @if (editModalOpen()) {
   <app-modal title="Editar tarea" (closed)="closeEditModal()">
     <form class="tv-form" [formGroup]="editForm" (ngSubmit)="submitEdit()">
@@ -114,29 +141,18 @@
           aria-describedby="edit-title-error"
         />
         @if (editForm.controls.title.invalid && editForm.controls.title.touched) {
-          <span class="form-field__error" id="edit-title-error" role="alert">
-            El título es requerido.
-          </span>
+          <span class="form-field__error" id="edit-title-error" role="alert">El título es requerido.</span>
         }
       </div>
 
       <div class="form-field">
         <label class="form-field__label" for="edit_description">Descripción</label>
-        <textarea
-          id="edit_description"
-          class="form-field__input form-field__textarea"
-          formControlName="description"
-          rows="3"
-        ></textarea>
+        <textarea id="edit_description" class="form-field__input form-field__textarea" formControlName="description" rows="3"></textarea>
       </div>
 
       <div class="form-field">
         <label class="form-field__label" for="edit_status">Estado</label>
-        <select
-          id="edit_status"
-          class="form-field__input form-field__select"
-          formControlName="status"
-        >
+        <select id="edit_status" class="form-field__input form-field__select" formControlName="status">
           @for (opt of taskStatusOptions; track opt.value) {
             <option [value]="opt.value">{{ opt.label }}</option>
           }
@@ -145,12 +161,7 @@
 
       <div class="form-field">
         <label class="form-field__label" for="edit_notes">Notas</label>
-        <textarea
-          id="edit_notes"
-          class="form-field__input form-field__textarea"
-          formControlName="notes"
-          rows="2"
-        ></textarea>
+        <textarea id="edit_notes" class="form-field__input form-field__textarea" formControlName="notes" rows="2"></textarea>
       </div>
 
       <footer class="tv-form__footer">
@@ -159,11 +170,11 @@
           {{ editSubmitting() ? 'Guardando…' : 'Guardar cambios' }}
         </app-button>
       </footer>
-
     </form>
   </app-modal>
 }
 
+<!-- ── Add modal ───────────────────────────────────────────────────────── -->
 @if (addModalOpen()) {
   <app-modal title="Nueva tarea" (closed)="closeAddModal()">
     <form class="tv-form" [formGroup]="addForm" (ngSubmit)="submitAdd()">
@@ -180,29 +191,18 @@
           aria-describedby="add-title-error"
         />
         @if (addForm.controls.title.invalid && addForm.controls.title.touched) {
-          <span class="form-field__error" id="add-title-error" role="alert">
-            El título es requerido.
-          </span>
+          <span class="form-field__error" id="add-title-error" role="alert">El título es requerido.</span>
         }
       </div>
 
       <div class="form-field">
         <label class="form-field__label" for="add_description">Descripción</label>
-        <textarea
-          id="add_description"
-          class="form-field__input form-field__textarea"
-          formControlName="description"
-          rows="3"
-        ></textarea>
+        <textarea id="add_description" class="form-field__input form-field__textarea" formControlName="description" rows="3"></textarea>
       </div>
 
       <div class="form-field">
         <label class="form-field__label" for="add_status">Estado</label>
-        <select
-          id="add_status"
-          class="form-field__input form-field__select"
-          formControlName="status"
-        >
+        <select id="add_status" class="form-field__input form-field__select" formControlName="status">
           @for (opt of taskStatusOptions; track opt.value) {
             <option [value]="opt.value">{{ opt.label }}</option>
           }
@@ -211,12 +211,7 @@
 
       <div class="form-field">
         <label class="form-field__label" for="add_notes">Notas</label>
-        <textarea
-          id="add_notes"
-          class="form-field__input form-field__textarea"
-          formControlName="notes"
-          rows="2"
-        ></textarea>
+        <textarea id="add_notes" class="form-field__input form-field__textarea" formControlName="notes" rows="2"></textarea>
       </div>
 
       <footer class="tv-form__footer">
@@ -225,76 +220,107 @@
           {{ addSubmitting() ? 'Guardando…' : 'Agregar tarea' }}
         </app-button>
       </footer>
-
     </form>
   </app-modal>
 }
 
+<!-- ── Images modal ─────────────────────────────────────────────────────── -->
 @if (imagesModalOpen()) {
-  <app-modal
-    [title]="'Imágenes — ' + imagesModalTask()!.title"
-    (closed)="closeImagesModal()"
-  >
+  <app-modal [title]="'Imágenes — ' + imagesModalTask()!.title" (closed)="closeImagesModal()">
     <div class="img-modal">
 
       @if (imagesService.loading()) {
-        <p class="img-modal__loading" role="status" aria-live="polite">Cargando imágenes…</p>
+        <div class="img-modal__loading" role="status" aria-live="polite">
+          <div class="tv__spinner" aria-hidden="true"></div>
+          <p>Cargando imágenes…</p>
+        </div>
       } @else if (imagesService.images().length === 0) {
-        <p class="img-modal__empty">No hay imágenes para esta tarea.</p>
+        <p class="img-modal__empty">No hay imágenes para esta tarea todavía.</p>
       } @else {
         <ul class="img-modal__gallery" aria-label="Imágenes de la tarea">
           @for (img of imagesService.images(); track img.id) {
             <li class="img-modal__gallery-item">
-              <a [href]="img.url" target="_blank" rel="noopener noreferrer" class="img-modal__thumb-link" [attr.aria-label]="'Ver imagen ' + $index">
+              <button
+                class="img-modal__thumb-btn"
+                type="button"
+                [attr.aria-label]="'Ver imagen ' + ($index + 1)"
+                (click)="openLightbox(img.url)"
+              >
                 <img [src]="img.url" alt="" class="img-modal__thumb" loading="lazy" />
-              </a>
+                <span class="img-modal__thumb-overlay" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </button>
             </li>
           }
         </ul>
       }
 
-      <div class="img-modal__upload-section">
-        <p class="img-modal__upload-label">Agregar imágenes</p>
+      <!-- Drop zone -->
+      <div
+        class="img-modal__dropzone"
+        [class.img-modal__dropzone--over]="dragOver()"
+        role="button"
+        tabindex="0"
+        aria-label="Subir imágenes: arrastra o haz clic para seleccionar"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave()"
+        (drop)="onDrop($event)"
+        (click)="fileInput.click()"
+        (keydown)="onDropzoneKeydown($event, fileInput)"
+      >
+        <input
+          #fileInput
+          type="file"
+          accept="image/*"
+          multiple
+          class="sr-only"
+          (change)="onFilesSelected($event)"
+        />
+        <svg class="img-modal__dropzone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 16V4m0 0L8 8m4-4l4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+        </svg>
+        <p class="img-modal__dropzone-text">
+          <strong>Arrastra imágenes aquí</strong> o haz clic para seleccionar
+        </p>
+        <p class="img-modal__dropzone-hint">PNG, JPG, WEBP</p>
+      </div>
 
-        <label class="img-modal__file-label" for="img_file_input">
-          Seleccionar archivos
-          <input
-            id="img_file_input"
-            type="file"
-            accept="image/*"
-            multiple
-            class="sr-only"
-            (change)="onFilesSelected($event)"
-          />
-        </label>
-
-        @if (pendingFiles().length > 0) {
-          <ul class="img-modal__pending" aria-label="Archivos seleccionados">
+      <!-- Pending previews -->
+      @if (pendingFiles().length > 0) {
+        <div class="img-modal__pending-section">
+          <p class="img-modal__pending-label">
+            {{ pendingFiles().length }} imagen{{ pendingFiles().length !== 1 ? 'es' : '' }} lista{{ pendingFiles().length !== 1 ? 's' : '' }} para subir
+          </p>
+          <ul class="img-modal__pending-grid" aria-label="Archivos seleccionados">
             @for (file of pendingFiles(); track $index) {
               <li class="img-modal__pending-item">
-                <span class="img-modal__file-name">{{ file.name }}</span>
+                <img [src]="pendingPreviews()[$index]" [alt]="file.name" class="img-modal__pending-img" />
                 <button
                   class="img-modal__remove-btn"
                   type="button"
                   [attr.aria-label]="'Quitar ' + file.name"
                   (click)="removePendingFile($index)"
                 >
-                  &times;
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                    <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                  </svg>
                 </button>
               </li>
             }
           </ul>
-        }
+        </div>
+      }
 
-        @if (imagesService.uploadError()) {
-          <p class="img-modal__error" role="alert">{{ imagesService.uploadError() }}</p>
-        }
-      </div>
+      @if (imagesService.uploadError()) {
+        <p class="img-modal__error" role="alert">{{ imagesService.uploadError() }}</p>
+      }
 
       <footer class="img-modal__footer">
-        <app-button variant="secondary" type="button" (click)="closeImagesModal()">
-          Cerrar
-        </app-button>
+        <app-button variant="secondary" type="button" (click)="closeImagesModal()">Cerrar</app-button>
         <app-button
           variant="primary"
           type="button"
@@ -302,13 +328,36 @@
           (click)="uploadImages()"
         >
           @if (imagesService.uploading()) {
+            <div class="tv__spinner tv__spinner--sm" aria-hidden="true"></div>
             Subiendo…
           } @else {
             Subir {{ pendingFiles().length }} imagen{{ pendingFiles().length !== 1 ? 'es' : '' }}
           }
         </app-button>
       </footer>
-
     </div>
   </app-modal>
+}
+
+<!-- ── Lightbox ──────────────────────────────────────────────────────────── -->
+@if (lightboxUrl()) {
+  <div
+    class="lightbox"
+    role="dialog"
+    aria-label="Imagen ampliada"
+    aria-modal="true"
+    (click)="closeLightbox()"
+  >
+    <button class="lightbox__close" type="button" aria-label="Cerrar imagen" (click)="closeLightbox()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+        <path d="M2 2l14 14M16 2L2 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <img
+      class="lightbox__img"
+      [src]="lightboxUrl()"
+      alt="Imagen de la tarea"
+      (click)="$event.stopPropagation()"
+    />
+  </div>
 }

@@ -21,6 +21,9 @@ import { TaskImagesService } from '../../services/task-images.service';
   imports: [ButtonComponent, ModalComponent, ReactiveFormsModule, DatePipe, RouterLink],
   templateUrl: './maintenance-tasks-view.html',
   styleUrl: './maintenance-tasks-view.css',
+  host: {
+    '(keydown.escape)': 'onEscape()',
+  },
 })
 export class MaintenanceTasksView {
   private readonly fb = inject(FormBuilder);
@@ -52,6 +55,9 @@ export class MaintenanceTasksView {
   readonly imagesModalTask = signal<MaintenanceTask | null>(null);
   readonly imagesModalOpen = computed(() => this.imagesModalTask() !== null);
   readonly pendingFiles = signal<File[]>([]);
+  readonly pendingPreviews = signal<string[]>([]);
+  readonly dragOver = signal(false);
+  readonly lightboxUrl = signal<string | null>(null);
 
   readonly taskStatusOptions: { value: TaskStatus; label: string }[] = [
     { value: 'pending',     label: 'Pendiente' },
@@ -85,6 +91,14 @@ export class MaintenanceTasksView {
     this.machinesService.load();
     this.tasksService.loadForMaintenance(this.maintenanceId);
   }
+
+  onEscape(): void {
+    if (this.lightboxUrl()) {
+      this.closeLightbox();
+    }
+  }
+
+  // ── Edit ──────────────────────────────────────────────────────────────────
 
   openEditModal(task: MaintenanceTask): void {
     this.editingTask.set(task);
@@ -129,6 +143,8 @@ export class MaintenanceTasksView {
     await this.tasksService.update(task.id, { status }, this.maintenanceId);
   }
 
+  // ── Add ───────────────────────────────────────────────────────────────────
+
   openAddModal(): void {
     this.addForm.reset({ status: 'pending' });
     this.addModalOpen.set(true);
@@ -161,26 +177,77 @@ export class MaintenanceTasksView {
     }
   }
 
+  // ── Images ────────────────────────────────────────────────────────────────
+
   openImagesModal(task: MaintenanceTask): void {
     this.imagesModalTask.set(task);
     this.pendingFiles.set([]);
+    this.pendingPreviews.set([]);
     this.imagesService.loadForTask(task.id);
   }
 
   closeImagesModal(): void {
+    this.lightboxUrl.set(null);
+    this.pendingPreviews().forEach(url => URL.revokeObjectURL(url));
     this.imagesModalTask.set(null);
     this.pendingFiles.set([]);
+    this.pendingPreviews.set([]);
   }
+
+  // ── Lightbox ──────────────────────────────────────────────────────────────
+
+  openLightbox(url: string): void {
+    this.lightboxUrl.set(url);
+  }
+
+  closeLightbox(): void {
+    this.lightboxUrl.set(null);
+  }
+
+  // ── File upload ───────────────────────────────────────────────────────────
 
   onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files ?? []);
-    this.pendingFiles.update(prev => [...prev, ...files]);
+    this.addFiles(Array.from(input.files ?? []));
     input.value = '';
   }
 
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.dragOver.set(true);
+  }
+
+  onDragLeave(): void {
+    this.dragOver.set(false);
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.dragOver.set(false);
+    const files = Array.from(event.dataTransfer?.files ?? []).filter(f =>
+      f.type.startsWith('image/')
+    );
+    this.addFiles(files);
+  }
+
+  onDropzoneKeydown(event: KeyboardEvent, fileInput: HTMLInputElement): void {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      fileInput.click();
+    }
+  }
+
+  private addFiles(files: File[]): void {
+    const previews = files.map(f => URL.createObjectURL(f));
+    this.pendingFiles.update(prev => [...prev, ...files]);
+    this.pendingPreviews.update(prev => [...prev, ...previews]);
+  }
+
   removePendingFile(index: number): void {
+    const preview = this.pendingPreviews()[index];
+    if (preview) URL.revokeObjectURL(preview);
     this.pendingFiles.update(files => files.filter((_, i) => i !== index));
+    this.pendingPreviews.update(prev => prev.filter((_, i) => i !== index));
   }
 
   async uploadImages(): Promise<void> {
@@ -190,7 +257,9 @@ export class MaintenanceTasksView {
 
     const { failedCount } = await this.imagesService.upload(task.id, files);
     if (failedCount === 0) {
+      this.pendingPreviews().forEach(url => URL.revokeObjectURL(url));
       this.pendingFiles.set([]);
+      this.pendingPreviews.set([]);
     }
   }
 }

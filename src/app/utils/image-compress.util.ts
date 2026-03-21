@@ -22,34 +22,20 @@ export class ImageCompressService {
     return new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' })
   }
 
-  // 👇 Convierte cualquier File/Blob a WebP via Canvas — garantizado
-  private async forceWebP(file: File, quality: number): Promise<File> {
+  // Extrae ImageData dibujando en canvas
+  private getImageData(file: File): Promise<ImageData> {
     return new Promise((resolve, reject) => {
       const img = new Image()
       const url = URL.createObjectURL(file)
 
       img.onload = () => {
         URL.revokeObjectURL(url)
-
-        const canvas    = document.createElement('canvas')
-        canvas.width    = img.width
-        canvas.height   = img.height
-
+        const canvas  = document.createElement('canvas')
+        canvas.width  = img.width
+        canvas.height = img.height
         const ctx = canvas.getContext('2d')!
         ctx.drawImage(img, 0, 0)
-
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) return reject(new Error('Error convirtiendo a WebP'))
-            resolve(new File(
-              [blob],
-              file.name.replace(/\.\w+$/, '.webp'),
-              { type: 'image/webp' }
-            ))
-          },
-          'image/webp',
-          quality
-        )
+        resolve(ctx.getImageData(0, 0, img.width, img.height))
       }
 
       img.onerror = () => {
@@ -61,13 +47,26 @@ export class ImageCompressService {
     })
   }
 
+  // Convierte a WebP usando encoder WASM — funciona en cualquier dispositivo.
+  // canvas.toBlob('image/webp') en iOS Safari < 16 produce PNG silenciosamente.
+  private async forceWebP(file: File, quality: number): Promise<File> {
+    const imageData              = await this.getImageData(file)
+    const { default: encode }    = await import('@jsquash/webp/encode')
+    const webpBytes              = await encode(imageData, { quality: Math.round(quality * 100) })
+    return new File(
+      [webpBytes],
+      file.name.replace(/\.\w+$/, '.webp'),
+      { type: 'image/webp' }
+    )
+  }
+
   async compress(file: File, onProgress?: (p: number) => void): Promise<File> {
     // 1. Convertir HEIC si es necesario
     const source = this.isHeic(file) ? await this.convertHeic(file) : file
 
     // 2. Reducir dimensiones y peso con browser-image-compression
     const resized = await imageCompression(source, {
-      maxSizeMB:            1,
+      maxSizeMB:            0.7,
       maxWidthOrHeight:     800,
       useWebWorker:         true,
       alwaysKeepResolution: false,

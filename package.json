@@ -18,6 +18,7 @@
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
     "@angular/service-worker": "^21.2.1",
+    "@jsquash/webp": "^1.5.0",
     "@ngx-env/builder": "^21.0.1",
     "@supabase/supabase-js": "^2.98.0",
     "browser-image-compression": "^2.0.2",
