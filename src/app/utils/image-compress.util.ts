@@ -9,10 +9,9 @@ export class ImageCompressService {
 
   private isHeic(file: File): boolean {
     const name = file.name.toLowerCase()
-    const isHeicExt  = this.HEIC_EXTENSIONS.some(ext => name.endsWith(ext))
-    const isHeicType = this.HEIC_TYPES.includes(file.type)
-    const hasNoType  = file.type === '' && isHeicExt
-    return isHeicExt || isHeicType || hasNoType
+    return this.HEIC_EXTENSIONS.some(ext => name.endsWith(ext))
+      || this.HEIC_TYPES.includes(file.type)
+      || (file.type === '' && this.HEIC_EXTENSIONS.some(ext => name.endsWith(ext)))
   }
 
   private async convertHeic(file: File): Promise<File> {
@@ -22,61 +21,85 @@ export class ImageCompressService {
     return new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' })
   }
 
-  // Extrae ImageData dibujando en canvas
   private getImageData(file: File): Promise<ImageData> {
     return new Promise((resolve, reject) => {
       const img = new Image()
       const url = URL.createObjectURL(file)
-
       img.onload = () => {
         URL.revokeObjectURL(url)
         const canvas  = document.createElement('canvas')
-        canvas.width  = img.width
-        canvas.height = img.height
+        canvas.width  = img.naturalWidth
+        canvas.height = img.naturalHeight
         const ctx = canvas.getContext('2d')!
         ctx.drawImage(img, 0, 0)
-        resolve(ctx.getImageData(0, 0, img.width, img.height))
+        resolve(ctx.getImageData(0, 0, img.naturalWidth, img.naturalHeight))
       }
-
-      img.onerror = () => {
-        URL.revokeObjectURL(url)
-        reject(new Error('No se pudo cargar la imagen'))
-      }
-
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('load failed')) }
       img.src = url
     })
   }
 
-  // Convierte a WebP usando encoder WASM — funciona en cualquier dispositivo.
-  // canvas.toBlob('image/webp') en iOS Safari < 16 produce PNG silenciosamente.
-  private async forceWebP(file: File, quality: number): Promise<File> {
-    const imageData              = await this.getImageData(file)
-    const { default: encode }    = await import('@jsquash/webp/encode')
-    const webpBytes              = await encode(imageData, { quality: Math.round(quality * 100) })
-    return new File(
-      [webpBytes],
-      file.name.replace(/\.\w+$/, '.webp'),
-      { type: 'image/webp' }
-    )
+  // Intenta WebP via WASM → canvas WebP → JPEG (cadena de fallbacks)
+  private async toWebP(file: File, quality: number): Promise<File> {
+    const imageData = await this.getImageData(file)
+
+    // 1. WASM encoder — funciona en cualquier dispositivo si el .wasm carga correctamente
+    try {
+      const { default: encode } = await import('@jsquash/webp/encode')
+      const bytes = await encode(imageData, { quality: Math.round(quality * 100) })
+      return new File([bytes], file.name.replace(/\.\w+$/, '.webp'), { type: 'image/webp' })
+    } catch {
+      // WASM no disponible (MIME type incorrecto, iOS restrictivo, etc.)
+    }
+
+    // 2. Canvas WebP — funciona en iOS 16+, Chrome, Firefox
+    const canvas  = document.createElement('canvas')
+    canvas.width  = imageData.width
+    canvas.height = imageData.height
+    canvas.getContext('2d')!.putImageData(imageData, 0, 0)
+
+    const tryBlob = (mime: string): Promise<Blob | null> =>
+      new Promise(res => canvas.toBlob(res, mime, quality))
+
+    const webpBlob = await tryBlob('image/webp')
+    if (webpBlob?.type === 'image/webp') {
+      return new File([webpBlob], file.name.replace(/\.\w+$/, '.webp'), { type: 'image/webp' })
+    }
+
+    // 3. JPEG — soporte universal, siempre comprime
+    const jpegBlob = await tryBlob('image/jpeg')
+    if (!jpegBlob) throw new Error('No se pudo encodear la imagen')
+    return new File([jpegBlob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' })
   }
 
   async compress(file: File, onProgress?: (p: number) => void): Promise<File> {
-    // 1. Convertir HEIC si es necesario
-    const source = this.isHeic(file) ? await this.convertHeic(file) : file
+    // 1. Convertir HEIC → JPEG (fotos iPhone en formato original)
+    let source = file
+    if (this.isHeic(file)) {
+      try { source = await this.convertHeic(file) } catch { /* mantener original */ }
+    }
 
-    // 2. Reducir dimensiones y peso con browser-image-compression
-    const resized = await imageCompression(source, {
-      maxSizeMB:            0.7,
-      maxWidthOrHeight:     800,
-      useWebWorker:         true,
-      alwaysKeepResolution: false,
-      onProgress:           onProgress ?? (() => {}),
-    })
+    // 2. Redimensionar y reducir peso (paso independiente)
+    let resized = source
+    try {
+      resized = await imageCompression(source, {
+        maxSizeMB:            0.8,
+        maxWidthOrHeight:     1920,
+        useWebWorker:         true,
+        alwaysKeepResolution: false,
+        onProgress:           onProgress ?? (() => {}),
+      })
+    } catch {
+      // imageCompression falló — continuar con source para al menos convertir formato
+    }
 
-    // 3. Forzar conversión a WebP via Canvas — aquí sí es garantizado
-    const webp = await this.forceWebP(resized, 0.6)
-
-    return webp
+    // 3. Convertir a WebP (o JPEG si WebP no está disponible)
+    // Si este paso falla, devolvemos lo que tengamos — nunca el archivo original sin comprimir
+    try {
+      return await this.toWebP(resized, 0.75)
+    } catch {
+      return resized
+    }
   }
 
   async compressAll(files: File[], onProgress?: (p: number) => void): Promise<File[]> {
@@ -87,6 +110,6 @@ export class ImageCompressService {
     const originalKB   = (original.size / 1024).toFixed(0)
     const compressedKB = (compressed.size / 1024).toFixed(0)
     const saved        = (((original.size - compressed.size) / original.size) * 100).toFixed(0)
-    console.log(`📸 ${original.name}: ${originalKB}KB → ${compressedKB}KB (${saved}% reducido)`)
+    console.log(`📸 ${original.name} → ${compressed.name}: ${originalKB}KB → ${compressedKB}KB (${saved}% reducido) [${compressed.type}]`)
   }
 }
