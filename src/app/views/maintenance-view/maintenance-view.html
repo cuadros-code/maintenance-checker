@@ -8,14 +8,12 @@
     }
   </header>
 
-  @if (maintenanceService.loading()) {
-    <div class="maintenance__status" role="status" aria-live="polite">
-      <p>Cargando mantenimientos…</p>
-    </div>
-  } @else if (maintenanceService.maintenances().length === 0) {
-    <div class="maintenance__status" role="status">
-      <p>No hay mantenimientos registrados.</p>
-    </div>
+  @if (maintenanceService.loading() || maintenanceService.maintenances().length === 0) {
+    <app-empty-state
+      [loading]="maintenanceService.loading()"
+      loadingText="Cargando mantenimientos…"
+      text="No hay mantenimientos registrados."
+    />
   } @else {
     <div class="maintenance__table-wrapper" role="region" aria-label="Lista de mantenimientos">
       <table class="maintenance__table">
@@ -42,25 +40,10 @@
                 }
               </td>
               <td data-label="Tipo">
-                <span
-                  class="maintenance__badge"
-                  [class.maintenance__badge--preventive]="item.type === 'preventive'"
-                  [class.maintenance__badge--corrective]="item.type === 'corrective'"
-                  [class.maintenance__badge--predictive]="item.type === 'predictive'"
-                >
-                  {{ typeLabels[item.type] }}
-                </span>
+                <app-badge [variant]="item.type">{{ typeLabels[item.type] }}</app-badge>
               </td>
               <td data-label="Estado">
-                <span
-                  class="maintenance__badge"
-                  [class.maintenance__badge--pending]="item.status === 'pending'"
-                  [class.maintenance__badge--in-progress]="item.status === 'in_progress'"
-                  [class.maintenance__badge--completed]="item.status === 'completed'"
-                  [class.maintenance__badge--cancelled]="item.status === 'cancelled'"
-                >
-                  {{ statusLabels[item.status] }}
-                </span>
+                <app-badge [variant]="item.status">{{ statusLabels[item.status] }}</app-badge>
               </td>
               <td data-label="Fecha programada">{{ item.scheduled_at | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td data-label="Asignado a">
@@ -169,14 +152,7 @@
                   <span class="task-item__desc">{{ task.description }}</span>
                 }
               </div>
-              <span class="maintenance__badge task-item__badge"
-                [class.maintenance__badge--pending]="task.status === 'pending'"
-                [class.maintenance__badge--in-progress]="task.status === 'in_progress'"
-                [class.maintenance__badge--completed]="task.status === 'completed'"
-                [class.task-item__badge--skipped]="task.status === 'skipped'"
-              >
-                {{ taskStatusLabels[task.status] }}
-              </span>
+              <app-badge [variant]="task.status">{{ taskStatusLabels[task.status] }}</app-badge>
             </li>
           }
         </ul>

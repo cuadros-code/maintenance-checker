@@ -4,6 +4,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { ButtonComponent } from '../../components/button/button.component';
 import { ModalComponent } from '../../components/modal/modal.component';
+import { BadgeComponent } from '../../components/badge/badge.component';
+import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { Machine, MachinesService } from '../../services/machines.service';
 import { AuthStore } from '../../core/auth.store';
 import {
@@ -24,7 +26,7 @@ import { UsersService } from '../../services/users.service';
 @Component({
   selector: 'app-maintenance-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonComponent, ModalComponent, ReactiveFormsModule, DatePipe],
+  imports: [ButtonComponent, ModalComponent, BadgeComponent, EmptyStateComponent, ReactiveFormsModule, DatePipe],
   templateUrl: './maintenance-view.html',
   styleUrl: './maintenance-view.css',
   host: {

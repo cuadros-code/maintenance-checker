@@ -1,19 +1,15 @@
 <section class="users">
   <header class="users__header">
     <h1 class="users__title">Usuarios</h1>
-    <button class="btn btn--primary" type="button" (click)="openModal()">
-      Nuevo usuario
-    </button>
+    <app-button (click)="openModal()">Nuevo usuario</app-button>
   </header>
 
-  @if (usersService.loading()) {
-    <div class="users__status" role="status" aria-live="polite">
-      <p>Cargando usuarios…</p>
-    </div>
-  } @else if (usersService.users().length === 0) {
-    <div class="users__status" role="status">
-      <p>No hay usuarios registrados.</p>
-    </div>
+  @if (usersService.loading() || usersService.users().length === 0) {
+    <app-empty-state
+      [loading]="usersService.loading()"
+      loadingText="Cargando usuarios…"
+      text="No hay usuarios registrados."
+    />
   } @else {
     <div class="users__table-wrapper" role="region" aria-label="Lista de usuarios">
       <table class="users__table">
@@ -31,14 +27,7 @@
               <td data-label="Correo electrónico">{{ user.email }}</td>
               <td data-label="Rol">
                 @if (user.role) {
-                  <span
-                    class="users__badge"
-                    [class.users__badge--admin]="user.role === 'admin'"
-                    [class.users__badge--technician]="user.role === 'technician'"
-                    [class.users__badge--supervisor]="user.role === 'supervisor'"
-                  >
-                    {{ roleLabels[user.role] }}
-                  </span>
+                  <app-badge [variant]="user.role">{{ roleLabels[user.role] }}</app-badge>
                 } @else {
                   <span class="users__unknown">Sin rol</span>
                 }
@@ -138,12 +127,10 @@
       </div>
 
       <footer class="modal__footer">
-        <button class="btn btn--secondary" type="button" (click)="closeModal()">
-          Cancelar
-        </button>
-        <button class="btn btn--primary" type="submit" [disabled]="submitting()">
+        <app-button variant="secondary" type="button" (click)="closeModal()">Cancelar</app-button>
+        <app-button type="submit" [disabled]="submitting()">
           {{ submitting() ? 'Guardando…' : 'Crear usuario' }}
-        </button>
+        </app-button>
       </footer>
 
     </form>

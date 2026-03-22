@@ -6,11 +6,13 @@ import { Machine, MachinesService } from '../../services/machines.service';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { AuthStore } from '../../core/auth.store';
 import { ButtonComponent } from '../../components/button/button.component';
+import { BadgeComponent } from '../../components/badge/badge.component';
+import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-machines',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, DatePipe, ModalComponent, ButtonComponent],
+  imports: [ReactiveFormsModule, DatePipe, ModalComponent, ButtonComponent, BadgeComponent, EmptyStateComponent],
   templateUrl: './machines.component.html',
   styleUrl: './machines.component.css',
   host: {

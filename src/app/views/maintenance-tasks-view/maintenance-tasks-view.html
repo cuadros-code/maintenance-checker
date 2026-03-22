@@ -18,14 +18,7 @@
             <span class="tv__context-code">{{ mac.code }}</span>{{ mac.name }}
           </span>
         }
-        <span
-          class="tv__badge"
-          [class.tv__badge--preventive]="m.type === 'preventive'"
-          [class.tv__badge--corrective]="m.type === 'corrective'"
-          [class.tv__badge--predictive]="m.type === 'predictive'"
-        >
-          {{ typeLabels[m.type] }}
-        </span>
+        <app-badge [variant]="m.type">{{ typeLabels[m.type] }}</app-badge>
         <span class="tv__context-date">{{ m.scheduled_at | date: 'dd/MM/yyyy HH:mm' }}</span>
       </div>
     }
@@ -38,21 +31,12 @@
     </app-button>
   </header>
 
-  @if (tasksService.loading()) {
-    <div class="tv__status" role="status" aria-live="polite">
-      <div class="tv__spinner" aria-hidden="true"></div>
-      <p>Cargando tareas…</p>
-    </div>
-  } @else if (tasksService.tasks().length === 0) {
-    <div class="tv__status tv__status--empty" role="status">
-      <svg class="tv__empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <rect x="3" y="5" width="18" height="16" rx="2" stroke="#d1d5db" stroke-width="1.5"/>
-        <path d="M3 10h18" stroke="#d1d5db" stroke-width="1.5"/>
-        <path d="M8 3v4M16 3v4" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M8 15h8M8 18h5" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-      <p>No hay tareas registradas para este mantenimiento.</p>
-    </div>
+  @if (tasksService.loading() || tasksService.tasks().length === 0) {
+    <app-empty-state
+      [loading]="tasksService.loading()"
+      loadingText="Cargando tareas…"
+      text="No hay tareas registradas para este mantenimiento."
+    />
   } @else {
     <div class="tv__board" role="region" aria-label="Tablero de tareas">
       @for (col of columns; track col.status) {
@@ -72,17 +56,41 @@
                 <div class="tv__card-header">
                   <span class="tv__card-num" aria-hidden="true">#{{ task.order_index + 1 }}</span>
                   <div class="tv__card-btns">
+                    @if (isAdmin()) {
+                      <button
+                        class="tv__icon-btn tv__icon-btn--danger"
+                        type="button"
+                        [attr.aria-label]="'Eliminar tarea ' + task.title"
+                        (click)="requestDelete(task)"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                    }
                     <button
                       class="tv__icon-btn"
                       type="button"
-                      [attr.aria-label]="'Imágenes de ' + task.title"
-                      (click)="openImagesModal(task)"
+                      [attr.aria-label]="'Ver imágenes de ' + task.title"
+                      (click)="openImagesModal(task, 'view')"
                     >
+                      <!-- eye -->
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.75"/>
+                      </svg>
+                    </button>
+                    <button
+                      class="tv__icon-btn"
+                      type="button"
+                      [attr.aria-label]="'Subir imágenes a ' + task.title"
+                      (click)="openImagesModal(task, 'upload')"
+                    >
+                      <!-- camera -->
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <rect x="2" y="5" width="20" height="15" rx="2" stroke="currentColor" stroke-width="1.75"/>
-                        <circle cx="8.5" cy="11.5" r="2" stroke="currentColor" stroke-width="1.75"/>
-                        <path d="M14 10l3 4H7l3-3" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M8 5l1-2h6l1 2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="12" cy="13" r="3.5" stroke="currentColor" stroke-width="1.75"/>
+                        <path d="M9 5l1-2h4l1 2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
                     </button>
                     <button
@@ -199,6 +207,7 @@
           id="add_title"
           class="form-field__input"
           type="text"
+          placeholder="Limpiar filtros"
           formControlName="title"
           autocomplete="off"
           [class.form-field__input--error]="addForm.controls.title.invalid && addForm.controls.title.touched"
@@ -211,7 +220,11 @@
 
       <div class="form-field">
         <label class="form-field__label" for="add_description">Descripción</label>
-        <textarea id="add_description" class="form-field__input form-field__textarea" formControlName="description" rows="3"></textarea>
+        <textarea 
+          id="add_description" 
+          placeholder="Descripción limpiar filtros"
+          class="form-field__input form-field__textarea" 
+          formControlName="description" rows="3"></textarea>
       </div>
 
       <div class="form-field">
@@ -225,7 +238,11 @@
 
       <div class="form-field">
         <label class="form-field__label" for="add_notes">Notas</label>
-        <textarea id="add_notes" class="form-field__input form-field__textarea" formControlName="notes" rows="2"></textarea>
+        <textarea 
+          id="add_notes" 
+          class="form-field__input form-field__textarea"
+          placeholder="Agrega pendientes o notas para tener en cuenta"
+          formControlName="notes" rows="2"></textarea>
       </div>
 
       <footer class="tv-form__footer">
@@ -245,12 +262,25 @@
 
       @if (imagesService.loading()) {
         <div class="img-modal__loading" role="status" aria-live="polite">
-          <div class="tv__spinner" aria-hidden="true"></div>
+          <app-spinner size="sm" label="Cargando imágenes" />
           <p>Cargando imágenes…</p>
         </div>
-      } @else if (imagesService.images().length === 0) {
-        <p class="img-modal__empty">No hay imágenes para esta tarea todavía.</p>
-      } @else {
+      } @else if (imagesService.images().length === 0 && imagesModalMode() === 'view') {
+        <div class="img-modal__empty-view">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="2" y="5" width="20" height="15" rx="2" stroke="#d1d5db" stroke-width="1.5"/>
+            <circle cx="12" cy="13" r="3.5" stroke="#d1d5db" stroke-width="1.5"/>
+            <path d="M9 5l1-2h4l1 2" stroke="#d1d5db" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <p>Esta tarea no tiene imágenes aún.</p>
+          <button class="img-modal__add-btn" type="button" (click)="switchToUpload()">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Agregar imágenes
+          </button>
+        </div>
+      } @else if (imagesService.images().length > 0) {
         <ul class="img-modal__gallery" aria-label="Imágenes de la tarea">
           @for (img of imagesService.images(); track img.id) {
             <li class="img-modal__gallery-item">
@@ -258,7 +288,7 @@
                 class="img-modal__thumb-btn"
                 type="button"
                 [attr.aria-label]="'Ver imagen ' + ($index + 1)"
-                (click)="openLightbox(img.url)"
+                (click)="openLightbox($index)"
               >
                 <img [src]="img.url" alt="" class="img-modal__thumb" loading="lazy" />
                 <span class="img-modal__thumb-overlay" aria-hidden="true">
@@ -272,36 +302,38 @@
         </ul>
       }
 
-      <!-- Drop zone -->
-      <div
-        class="img-modal__dropzone"
-        [class.img-modal__dropzone--over]="dragOver()"
-        role="button"
-        tabindex="0"
-        aria-label="Subir imágenes: arrastra o haz clic para seleccionar"
-        (dragover)="onDragOver($event)"
-        (dragleave)="onDragLeave()"
-        (drop)="onDrop($event)"
-        (click)="fileInput.click()"
-        (keydown)="onDropzoneKeydown($event, fileInput)"
-      >
-        <input
-          #fileInput
-          type="file"
-          accept="image/*"
-          multiple
-          class="sr-only"
-          (change)="onFilesSelected($event)"
-        />
-        <svg class="img-modal__dropzone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 16V4m0 0L8 8m4-4l4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-        </svg>
-        <p class="img-modal__dropzone-text">
-          <strong>Arrastra imágenes aquí</strong> o haz clic para seleccionar
-        </p>
-        <p class="img-modal__dropzone-hint">PNG, JPG, WEBP</p>
-      </div>
+      <!-- Upload zone — solo en modo upload -->
+      @if (imagesModalMode() === 'upload') {
+        <div
+          class="img-modal__dropzone"
+          [class.img-modal__dropzone--over]="dragOver()"
+          role="button"
+          tabindex="0"
+          aria-label="Subir imágenes: arrastra o haz clic para seleccionar"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave()"
+          (drop)="onDrop($event)"
+          (click)="fileInput.click()"
+          (keydown)="onDropzoneKeydown($event, fileInput)"
+        >
+          <input
+            #fileInput
+            type="file"
+            accept="image/*"
+            multiple
+            class="sr-only"
+            (change)="onFilesSelected($event)"
+          />
+          <svg class="img-modal__dropzone-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 16V4m0 0L8 8m4-4l4 4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+          <p class="img-modal__dropzone-text">
+            <strong>Arrastra imágenes aquí</strong> o haz clic para seleccionar
+          </p>
+          <p class="img-modal__dropzone-hint">PNG, JPG, WEBP</p>
+        </div>
+      }
 
       <!-- Pending previews -->
       @if (pendingFiles().length > 0) {
@@ -335,43 +367,127 @@
 
       <footer class="img-modal__footer">
         <app-button variant="secondary" type="button" (click)="closeImagesModal()">Cerrar</app-button>
-        <app-button
-          variant="primary"
-          type="button"
-          [disabled]="imagesService.uploading() || pendingFiles().length === 0"
-          (click)="uploadImages()"
-        >
-          @if (imagesService.uploading()) {
-            <div class="tv__spinner tv__spinner--sm" aria-hidden="true"></div>
-            Subiendo…
-          } @else {
-            Subir {{ pendingFiles().length }} imagen{{ pendingFiles().length !== 1 ? 'es' : '' }}
+
+        @if (imagesModalMode() === 'view') {
+          @if (imagesService.images().length > 0) {
+            <button class="img-modal__add-btn" type="button" (click)="switchToUpload()">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Agregar imágenes
+            </button>
           }
-        </app-button>
+        } @else {
+          <app-button
+            variant="primary"
+            type="button"
+            [disabled]="imagesService.uploading() || pendingFiles().length === 0"
+            (click)="uploadImages()"
+          >
+            @if (imagesService.uploading()) {
+              <app-spinner size="sm" label="Subiendo imagen" />
+              Subiendo…
+            } @else {
+              Subir {{ pendingFiles().length }} imagen{{ pendingFiles().length !== 1 ? 'es' : '' }}
+            }
+          </app-button>
+        }
       </footer>
     </div>
   </app-modal>
 }
 
+<!-- ── Delete confirm modal ──────────────────────────────────────────────── -->
+@if (confirmDeleteTask(); as task) {
+  <div class="del-backdrop" role="dialog" aria-modal="true" aria-labelledby="del-title" (click)="cancelDelete()">
+    <div class="del-dialog" (click)="$event.stopPropagation()">
+      <div class="del-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="del-title" id="del-title">Eliminar tarea</h2>
+      <p class="del-body">
+        ¿Estás seguro de que quieres eliminar
+        <strong>{{ task.title }}</strong>?
+        Esta acción no se puede deshacer.
+      </p>
+      <div class="del-actions">
+        <button class="del-btn del-btn--cancel" type="button" (click)="cancelDelete()">
+          Cancelar
+        </button>
+        <button
+          class="del-btn del-btn--confirm"
+          type="button"
+          [disabled]="deletingTask()"
+          (click)="confirmDelete()"
+        >
+          @if (deletingTask()) {
+            <app-spinner size="sm" label="Eliminando tarea" />
+            Eliminando…
+          } @else {
+            Sí, eliminar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
 <!-- ── Lightbox ──────────────────────────────────────────────────────────── -->
-@if (lightboxUrl()) {
+@if (lightboxIndex() !== null) {
   <div
     class="lightbox"
     role="dialog"
-    aria-label="Imagen ampliada"
+    aria-label="Visor de imágenes"
     aria-modal="true"
     (click)="closeLightbox()"
+    (keydown)="onLightboxKey($event)"
   >
-    <button class="lightbox__close" type="button" aria-label="Cerrar imagen" (click)="closeLightbox()">
+    <!-- Cerrar -->
+    <button class="lightbox__close" type="button" aria-label="Cerrar" (click)="closeLightbox()">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
         <path d="M2 2l14 14M16 2L2 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
     </button>
+
+    <!-- Flecha anterior -->
+    <button
+      class="lightbox__arrow lightbox__arrow--prev"
+      type="button"
+      aria-label="Imagen anterior"
+      [disabled]="!lightboxHasPrev()"
+      (click)="$event.stopPropagation(); prevImage()"
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- Imagen -->
     <img
       class="lightbox__img"
       [src]="lightboxUrl()"
       alt="Imagen de la tarea"
       (click)="$event.stopPropagation()"
     />
+
+    <!-- Flecha siguiente -->
+    <button
+      class="lightbox__arrow lightbox__arrow--next"
+      type="button"
+      aria-label="Imagen siguiente"
+      [disabled]="!lightboxHasNext()"
+      (click)="$event.stopPropagation(); nextImage()"
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- Contador -->
+    <div class="lightbox__counter" aria-live="polite" aria-atomic="true">
+      {{ (lightboxIndex() ?? 0) + 1 }} / {{ imagesService.images().length }}
+    </div>
   </div>
 }

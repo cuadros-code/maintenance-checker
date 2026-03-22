@@ -4,6 +4,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { ButtonComponent } from '../../components/button/button.component';
 import { ModalComponent } from '../../components/modal/modal.component';
+import { BadgeComponent } from '../../components/badge/badge.component';
+import { SpinnerComponent } from '../../components/spinner/spinner.component';
+import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { MachinesService } from '../../services/machines.service';
 import { MaintenanceService, MaintenanceType } from '../../services/maintenance.service';
 import {
@@ -14,11 +17,12 @@ import {
   TaskStatus,
 } from '../../services/maintenance-tasks.service';
 import { TaskImagesService } from '../../services/task-images.service';
+import { AuthStore } from '../../core/auth.store';
 
 @Component({
   selector: 'app-maintenance-tasks-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonComponent, ModalComponent, ReactiveFormsModule, DatePipe, RouterLink],
+  imports: [ButtonComponent, ModalComponent, BadgeComponent, SpinnerComponent, EmptyStateComponent, ReactiveFormsModule, DatePipe, RouterLink],
   templateUrl: './maintenance-tasks-view.html',
   styleUrl: './maintenance-tasks-view.css',
   host: {
@@ -32,6 +36,9 @@ export class MaintenanceTasksView {
   readonly imagesService = inject(TaskImagesService);
   private readonly maintenanceService = inject(MaintenanceService);
   private readonly machinesService = inject(MachinesService);
+  private readonly authStore = inject(AuthStore);
+
+  readonly isAdmin = this.authStore.isAdmin;
 
   readonly maintenanceId = Number(this.route.snapshot.paramMap.get('id'));
 
@@ -54,10 +61,25 @@ export class MaintenanceTasksView {
 
   readonly imagesModalTask = signal<MaintenanceTask | null>(null);
   readonly imagesModalOpen = computed(() => this.imagesModalTask() !== null);
+  readonly imagesModalMode = signal<'view' | 'upload'>('view');
   readonly pendingFiles = signal<File[]>([]);
   readonly pendingPreviews = signal<string[]>([]);
   readonly dragOver = signal(false);
-  readonly lightboxUrl = signal<string | null>(null);
+  readonly confirmDeleteTask = signal<MaintenanceTask | null>(null);
+  readonly lightboxIndex = signal<number | null>(null);
+  readonly lightboxUrl = computed(() => {
+    const idx = this.lightboxIndex();
+    if (idx === null) return null;
+    return this.imagesService.images()[idx]?.url ?? null;
+  });
+  readonly lightboxHasPrev = computed(() => {
+    const idx = this.lightboxIndex();
+    return idx !== null && idx > 0;
+  });
+  readonly lightboxHasNext = computed(() => {
+    const idx = this.lightboxIndex();
+    return idx !== null && idx < this.imagesService.images().length - 1;
+  });
 
   readonly taskStatusOptions: { value: TaskStatus; label: string }[] = [
     { value: 'pending',     label: 'Pendiente' },
@@ -112,9 +134,14 @@ export class MaintenanceTasksView {
   }
 
   onEscape(): void {
-    if (this.lightboxUrl()) {
+    if (this.lightboxIndex() !== null) {
       this.closeLightbox();
     }
+  }
+
+  onLightboxKey(event: KeyboardEvent): void {
+    if (event.key === 'ArrowLeft')  this.prevImage();
+    if (event.key === 'ArrowRight') this.nextImage();
   }
 
   openEditModal(task: MaintenanceTask): void {
@@ -160,6 +187,28 @@ export class MaintenanceTasksView {
     await this.tasksService.update(task.id, { status }, this.maintenanceId);
   }
 
+  readonly deletingTask = signal(false);
+
+  requestDelete(task: MaintenanceTask): void {
+    this.confirmDeleteTask.set(task);
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteTask.set(null);
+  }
+
+  async confirmDelete(): Promise<void> {
+    const task = this.confirmDeleteTask();
+    if (!task) return;
+    this.deletingTask.set(true);
+    try {
+      await this.tasksService.delete(task.id, this.maintenanceId);
+      this.confirmDeleteTask.set(null);
+    } finally {
+      this.deletingTask.set(false);
+    }
+  }
+
 
   openAddModal(): void {
     this.addForm.reset({ status: 'pending' });
@@ -193,27 +242,44 @@ export class MaintenanceTasksView {
     }
   }
 
-  openImagesModal(task: MaintenanceTask): void {
+  openImagesModal(task: MaintenanceTask, mode: 'view' | 'upload' = 'view'): void {
     this.imagesModalTask.set(task);
+    this.imagesModalMode.set(mode);
     this.pendingFiles.set([]);
     this.pendingPreviews.set([]);
     this.imagesService.loadForTask(task.id);
   }
 
+  switchToUpload(): void {
+    this.imagesModalMode.set('upload');
+  }
+
   closeImagesModal(): void {
-    this.lightboxUrl.set(null);
+    this.lightboxIndex.set(null);
     this.pendingPreviews().forEach(url => URL.revokeObjectURL(url));
     this.imagesModalTask.set(null);
     this.pendingFiles.set([]);
     this.pendingPreviews.set([]);
+    this.imagesModalMode.set('view');
   }
 
-  openLightbox(url: string): void {
-    this.lightboxUrl.set(url);
+  openLightbox(index: number): void {
+    this.lightboxIndex.set(index);
   }
 
   closeLightbox(): void {
-    this.lightboxUrl.set(null);
+    this.lightboxIndex.set(null);
+  }
+
+  prevImage(): void {
+    const idx = this.lightboxIndex();
+    if (idx !== null && idx > 0) this.lightboxIndex.set(idx - 1);
+  }
+
+  nextImage(): void {
+    const idx = this.lightboxIndex();
+    if (idx !== null && idx < this.imagesService.images().length - 1)
+      this.lightboxIndex.set(idx + 1);
   }
 
   onFilesSelected(event: Event): void {

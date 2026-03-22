@@ -8,14 +8,12 @@
     }
   </header>
 
-  @if (machinesService.loading()) {
-    <div class="machines__status" role="status" aria-live="polite">
-      <p>Cargando equipos…</p>
-    </div>
-  } @else if (machinesService.machines().length === 0) {
-    <div class="machines__status" role="status">
-      <p>No hay equipos registrados.</p>
-    </div>
+  @if (machinesService.loading() || machinesService.machines().length === 0) {
+    <app-empty-state
+      [loading]="machinesService.loading()"
+      loadingText="Cargando equipos…"
+      text="No hay equipos registrados."
+    />
   } @else {
     <div class="machines__table-wrapper" role="region" aria-label="Lista de equipos">
       <table class="machines__table">
@@ -36,14 +34,7 @@
               <td data-label="Nombre">{{ machine.name }}</td>
               <td data-label="Ubicación">{{ machine.location }}</td>
               <td data-label="Estado">
-                <span
-                  class="machines__badge"
-                  [class.machines__badge--active]="machine.status === 'active'"
-                  [class.machines__badge--inactive]="machine.status === 'inactive'"
-                  [class.machines__badge--maintenance]="machine.status === 'under_maintenance'"
-                >
-                  {{ statusLabels[machine.status] }}
-                </span>
+                <app-badge [variant]="machine.status">{{ statusLabels[machine.status] }}</app-badge>
               </td>
               <td data-label="Creado">{{ machine.created_at | date: 'dd/MM/yyyy' }}</td>
               <td class="machines__actions-cell">
@@ -180,20 +171,10 @@
       </div>
 
       <footer class="modal__footer">
-        <button
-          class="btn btn--secondary"
-          type="button"
-          (click)="closeModal()"
-        >
-          Cancelar
-        </button>
-        <button
-          class="btn btn--primary"
-          type="submit"
-          [disabled]="submitting()"
-        >
+        <app-button variant="secondary" type="button" (click)="closeModal()">Cancelar</app-button>
+        <app-button type="submit" [disabled]="submitting()">
           {{ submitting() ? 'Guardando…' : (editingMachine() ? 'Guardar cambios' : 'Guardar equipo') }}
-        </button>
+        </app-button>
       </footer>
     </form>
   </app-modal>
