@@ -5,7 +5,16 @@
 }
 
 .dashboard-home__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
   margin-bottom: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.dashboard-home__heading {
+  min-width: 0;
 }
 
 .dashboard-home__title {
@@ -20,6 +29,54 @@
   font-size: 0.9375rem;
   color: #64748b;
   margin: 0.25rem 0 0;
+}
+
+.dashboard-home__filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.dashboard-home__filter-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.dashboard-home__filter-select {
+  appearance: none;
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.4375rem 2rem 0.4375rem 0.75rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: #0f172a;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  max-width: 14rem;
+}
+
+.dashboard-home__filter-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+@media (max-width: 480px) {
+  .dashboard-home__filter {
+    width: 100%;
+  }
+
+  .dashboard-home__filter-select {
+    flex: 1;
+    max-width: none;
+  }
 }
 
 /* ── Skeleton ── */

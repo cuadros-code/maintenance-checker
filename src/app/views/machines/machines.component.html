@@ -8,70 +8,140 @@
     }
   </header>
 
-  @if (machinesService.loading() || machinesService.machines().length === 0) {
+  @if (machinesService.loading()) {
     <app-empty-state
-      [loading]="machinesService.loading()"
+      [loading]="true"
       loadingText="Cargando equipos…"
+      text=""
+    />
+  } @else if (machinesService.machines().length === 0) {
+    <app-empty-state
+      [loading]="false"
       text="No hay equipos registrados."
     />
   } @else {
-    <div class="machines__table-wrapper" role="region" aria-label="Lista de equipos">
-      <table class="machines__table">
-        <thead>
-          <tr>
-            <th scope="col">Código</th>
-            <th scope="col">Nombre</th>
-            <th scope="col">Ubicación</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Creado</th>
-            <th scope="col"><span class="sr-only">Acciones</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (machine of machinesService.machines(); track machine.id) {
-            <tr>
-              <td data-label="Código">{{ machine.code }}</td>
-              <td data-label="Nombre">{{ machine.name }}</td>
-              <td data-label="Ubicación">{{ machine.location }}</td>
-              <td data-label="Estado">
-                <app-badge [variant]="machine.status">{{ statusLabels[machine.status] }}</app-badge>
-              </td>
-              <td data-label="Creado">{{ machine.created_at | date: 'dd/MM/yyyy' }}</td>
-              <td class="machines__actions-cell">
-                <div class="machines__dropdown">
-                  <button
-                    class="machines__dropdown-toggle"
-                    type="button"
-                    [attr.aria-expanded]="openDropdownId() === machine.id"
-                    [attr.aria-label]="'Acciones para ' + machine.name"
-                    (click)="toggleDropdown(machine.id, $event)"
-                  >
-                    &#8942;
-                  </button>
-                  @if (openDropdownId() === machine.id) {
-                    <ul class="machines__dropdown-menu" role="menu"
-                      [style.top.px]="dropdownPos()!.top"
-                      [style.right.px]="dropdownPos()!.right"
-                    >
-                      <li role="none">
-                        <button
-                          class="machines__dropdown-item"
-                          type="button"
-                          role="menuitem"
-                          (click)="openEditModal(machine)"
-                        >
-                          Editar equipo
-                        </button>
-                      </li>
-                    </ul>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    <!-- Filters bar -->
+    <div class="filters-bar" role="search" aria-label="Filtrar equipos">
+      <div class="filters-bar__search">
+        <svg class="filters-bar__search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+          <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input
+          class="filters-bar__input"
+          type="search"
+          placeholder="Buscar por código, nombre o ubicación…"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+          aria-label="Buscar equipos"
+        />
+      </div>
+
+      <select
+        class="filters-bar__select"
+        [value]="filterStatus()"
+        (change)="filterStatus.set($any($event.target).value)"
+        aria-label="Filtrar por estado"
+      >
+        <option value="">Todos los estados</option>
+        @for (opt of statusOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+
+      @if (activeFilterCount() > 0) {
+        <button
+          class="filters-bar__clear"
+          type="button"
+          (click)="clearFilters()"
+          [attr.aria-label]="'Limpiar ' + activeFilterCount() + ' filtros activos'"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          Limpiar
+          <span class="filters-bar__badge">{{ activeFilterCount() }}</span>
+        </button>
+      }
     </div>
+
+    @if (filteredMachines().length === 0) {
+      <div class="filters-empty">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" stroke="#94a3b8" stroke-width="1.5"/>
+          <path d="M21 21l-4.35-4.35" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <p class="filters-empty__text">Sin resultados para los filtros aplicados.</p>
+        <button class="filters-empty__clear" type="button" (click)="clearFilters()">Limpiar filtros</button>
+      </div>
+    } @else {
+      <div class="machines__table-wrapper" role="region" aria-label="Lista de equipos">
+        <div class="machines__table-meta">
+          <span class="machines__count" aria-live="polite" aria-atomic="true">
+            {{ filteredMachines().length }}
+            {{ filteredMachines().length === 1 ? 'resultado' : 'resultados' }}
+            @if (activeFilterCount() > 0) {
+              <span class="machines__count-filtered"> (filtrado)</span>
+            }
+          </span>
+        </div>
+        <table class="machines__table">
+          <thead>
+            <tr>
+              <th scope="col">Código</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Ubicación</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Creado</th>
+              <th scope="col"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (machine of filteredMachines(); track machine.id) {
+              <tr>
+                <td data-label="Código">{{ machine.code }}</td>
+                <td data-label="Nombre">{{ machine.name }}</td>
+                <td data-label="Ubicación">{{ machine.location }}</td>
+                <td data-label="Estado">
+                  <app-badge [variant]="machine.status">{{ statusLabels[machine.status] }}</app-badge>
+                </td>
+                <td data-label="Creado">{{ machine.created_at | date: 'dd/MM/yyyy' }}</td>
+                <td class="machines__actions-cell">
+                  <div class="machines__dropdown">
+                    <button
+                      class="machines__dropdown-toggle"
+                      type="button"
+                      [attr.aria-expanded]="openDropdownId() === machine.id"
+                      [attr.aria-label]="'Acciones para ' + machine.name"
+                      (click)="toggleDropdown(machine.id, $event)"
+                    >
+                      &#8942;
+                    </button>
+                    @if (openDropdownId() === machine.id) {
+                      <ul class="machines__dropdown-menu" role="menu"
+                        [style.top.px]="dropdownPos()!.top"
+                        [style.right.px]="dropdownPos()!.right"
+                      >
+                        <li role="none">
+                          <button
+                            class="machines__dropdown-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="openEditModal(machine)"
+                          >
+                            Editar equipo
+                          </button>
+                        </li>
+                      </ul>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   }
 </section>
 

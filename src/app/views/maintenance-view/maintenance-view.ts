@@ -42,6 +42,7 @@ export class MaintenanceView {
   readonly authStore = inject(AuthStore);
   readonly usersService = inject(UsersService);
 
+  // ── Modals / UI state ───────────────────────────────────────────────────
   readonly modalOpen = signal(false);
   readonly submitting = signal(false);
   readonly editingId = signal<number | null>(null);
@@ -54,6 +55,69 @@ export class MaintenanceView {
   readonly tasksModalOpen = computed(() => this.tasksModalItem() !== null);
   readonly taskSubmitting = signal(false);
 
+  // ── Filters ─────────────────────────────────────────────────────────────
+  readonly searchQuery  = signal('');
+  readonly filterStatus = signal<MaintenanceStatus | ''>('');
+  readonly filterType   = signal<MaintenanceType | ''>('');
+  readonly filterDateFrom = signal('');
+  readonly filterDateTo   = signal('');
+
+  readonly filteredMaintenances = computed(() => {
+    const query    = this.searchQuery().toLowerCase().trim();
+    const status   = this.filterStatus();
+    const type     = this.filterType();
+    const dateFrom = this.filterDateFrom();
+    const dateTo   = this.filterDateTo();
+    const machines = this.machineMap();
+
+    return this.maintenanceService.maintenances().filter(m => {
+      if (status && m.status !== status) return false;
+      if (type   && m.type   !== type)   return false;
+
+      if (dateFrom) {
+        const from = new Date(dateFrom);
+        from.setHours(0, 0, 0, 0);
+        if (new Date(m.scheduled_at) < from) return false;
+      }
+      if (dateTo) {
+        const to = new Date(dateTo);
+        to.setHours(23, 59, 59, 999);
+        if (new Date(m.scheduled_at) > to) return false;
+      }
+
+      if (query) {
+        const machine  = machines.get(m.machine_id);
+        const haystack = [
+          machine?.name ?? '',
+          machine?.code ?? '',
+          m.description ?? '',
+        ].join(' ').toLowerCase();
+        if (!haystack.includes(query)) return false;
+      }
+
+      return true;
+    });
+  });
+
+  readonly activeFilterCount = computed(() =>
+    [
+      this.searchQuery().trim(),
+      this.filterStatus(),
+      this.filterType(),
+      this.filterDateFrom(),
+      this.filterDateTo(),
+    ].filter(Boolean).length
+  );
+
+  clearFilters(): void {
+    this.searchQuery.set('');
+    this.filterStatus.set('');
+    this.filterType.set('');
+    this.filterDateFrom.set('');
+    this.filterDateTo.set('');
+  }
+
+  // ── Computed labels / options ───────────────────────────────────────────
   readonly isEditing = computed(() => this.editingId() !== null);
   readonly modalTitle = computed(() =>
     this.isEditing() ? 'Editar mantenimiento' : 'Programar mantenimiento'
@@ -70,10 +134,10 @@ export class MaintenanceView {
   ];
 
   readonly statusOptions: { value: MaintenanceStatus; label: string }[] = [
-    { value: 'pending', label: 'Pendiente' },
+    { value: 'pending',     label: 'Pendiente' },
     { value: 'in_progress', label: 'En progreso' },
-    { value: 'completed', label: 'Completado' },
-    { value: 'cancelled', label: 'Cancelado' },
+    { value: 'completed',   label: 'Completado' },
+    { value: 'cancelled',   label: 'Cancelado' },
   ];
 
   readonly typeLabels: Record<MaintenanceType, string> = {
@@ -104,6 +168,7 @@ export class MaintenanceView {
     new Map(this.usersService.users().map(u => [u.id, u]))
   );
 
+  // ── Forms ───────────────────────────────────────────────────────────────
   readonly form = this.fb.group({
     machine_id      : [null as number | null, Validators.required],
     type            : ['preventive' as MaintenanceType, Validators.required],
@@ -136,6 +201,7 @@ export class MaintenanceView {
     this.usersService.load();
   }
 
+  // ── Modal actions ────────────────────────────────────────────────────────
   openModal(): void {
     this.editingId.set(null);
     this.form.reset({ type: 'preventive', status: 'pending' });

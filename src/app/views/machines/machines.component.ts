@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { MachineStatus } from '../../constants/machines.const';
@@ -30,24 +30,52 @@ export class MachinesComponent {
   readonly openDropdownId = signal<number | null>(null);
   readonly dropdownPos = signal<{ top: number; right: number } | null>(null);
 
+  // ── Filters ─────────────────────────────────────────────────────────────
+  readonly searchQuery  = signal('');
+  readonly filterStatus = signal<MachineStatus | ''>('');
+
+  readonly filteredMachines = computed(() => {
+    const query  = this.searchQuery().toLowerCase().trim();
+    const status = this.filterStatus();
+
+    return this.machinesService.machines().filter(m => {
+      if (status && m.status !== status) return false;
+      if (query) {
+        const haystack = [m.code, m.name, m.location].join(' ').toLowerCase();
+        if (!haystack.includes(query)) return false;
+      }
+      return true;
+    });
+  });
+
+  readonly activeFilterCount = computed(() =>
+    [this.searchQuery().trim(), this.filterStatus()].filter(Boolean).length
+  );
+
+  clearFilters(): void {
+    this.searchQuery.set('');
+    this.filterStatus.set('');
+  }
+
+  // ── Options / labels ─────────────────────────────────────────────────────
   readonly statusOptions: { value: MachineStatus; label: string }[] = [
-    { value: 'active', label: 'Activo' },
-    { value: 'inactive', label: 'Inactivo' },
+    { value: 'active',            label: 'Activo' },
+    { value: 'inactive',          label: 'Inactivo' },
     { value: 'under_maintenance', label: 'En mantenimiento' },
   ];
 
   readonly statusLabels: Record<MachineStatus, string> = {
-    active: 'Activo',
-    inactive: 'Inactivo',
+    active:            'Activo',
+    inactive:          'Inactivo',
     under_maintenance: 'En mantenimiento',
   };
 
   readonly form = this.fb.group({
-    code          : ['', [Validators.required, Validators.maxLength(50)]],
-    name          : ['', [Validators.required, Validators.maxLength(100)]],
-    location      : ['', [Validators.required, Validators.maxLength(150)]],
-    serial_number : [''],
-    status        : ['active' as MachineStatus, Validators.required],
+    code         : ['', [Validators.required, Validators.maxLength(50)]],
+    name         : ['', [Validators.required, Validators.maxLength(100)]],
+    location     : ['', [Validators.required, Validators.maxLength(150)]],
+    serial_number: [''],
+    status       : ['active' as MachineStatus, Validators.required],
   });
 
   constructor() {
@@ -63,11 +91,11 @@ export class MachinesComponent {
   openEditModal(machine: Machine): void {
     this.editingMachine.set(machine);
     this.form.setValue({
-      code: machine.code,
-      name: machine.name,
-      location: machine.location,
+      code         : machine.code,
+      name         : machine.name,
+      location     : machine.location,
       serial_number: machine.serial_number ?? '',
-      status: machine.status,
+      status       : machine.status,
     });
     this.openDropdownId.set(null);
     this.modalOpen.set(true);

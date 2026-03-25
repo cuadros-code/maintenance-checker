@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MaintenanceService } from '../../services/maintenance.service';
@@ -15,13 +15,23 @@ export class DashboardHomeComponent implements OnInit {
   private readonly maintenanceService = inject(MaintenanceService);
   private readonly machinesService = inject(MachinesService);
 
+  readonly selectedMachineId = signal<number | null>(null);
+
+  readonly machines = computed(() => this.machinesService.machines());
+
   readonly loading = computed(() => this.maintenanceService.loading());
 
-  readonly total      = computed(() => this.maintenanceService.maintenances().length);
-  readonly pending    = computed(() => this.maintenanceService.maintenances().filter(m => m.status === 'pending').length);
-  readonly inProgress = computed(() => this.maintenanceService.maintenances().filter(m => m.status === 'in_progress').length);
-  readonly completed  = computed(() => this.maintenanceService.maintenances().filter(m => m.status === 'completed').length);
-  readonly cancelled  = computed(() => this.maintenanceService.maintenances().filter(m => m.status === 'cancelled').length);
+  readonly filteredMaintenances = computed(() => {
+    const id = this.selectedMachineId();
+    const all = this.maintenanceService.maintenances();
+    return id === null ? all : all.filter(m => m.machine_id === id);
+  });
+
+  readonly total      = computed(() => this.filteredMaintenances().length);
+  readonly pending    = computed(() => this.filteredMaintenances().filter(m => m.status === 'pending').length);
+  readonly inProgress = computed(() => this.filteredMaintenances().filter(m => m.status === 'in_progress').length);
+  readonly completed  = computed(() => this.filteredMaintenances().filter(m => m.status === 'completed').length);
+  readonly cancelled  = computed(() => this.filteredMaintenances().filter(m => m.status === 'cancelled').length);
 
   readonly completionRate = computed(() => {
     const t = this.total();
@@ -52,7 +62,7 @@ export class DashboardHomeComponent implements OnInit {
   });
 
   readonly typeStats = computed(() => {
-    const ms = this.maintenanceService.maintenances();
+    const ms = this.filteredMaintenances();
     const counts = {
       preventive: ms.filter(m => m.type === 'preventive').length,
       corrective:  ms.filter(m => m.type === 'corrective').length,
@@ -73,11 +83,10 @@ export class DashboardHomeComponent implements OnInit {
   });
 
   readonly recentMaintenances = computed(() =>
-    [...this.maintenanceService.maintenances()]
+    [...this.filteredMaintenances()]
       .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
       .slice(0, 6)
   );
-
 
   readonly monthlyStats = computed(() => {
     const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -86,42 +95,41 @@ export class DashboardHomeComponent implements OnInit {
       const now = new Date();
       return Array.from({ length: 6 }, (_, i) => {
         const date = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
-        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '00')}`;
         const crossesYear = date.getFullYear() !== now.getFullYear();
         const label = crossesYear
           ? `${MONTH_NAMES[date.getMonth()]} '${String(date.getFullYear()).slice(2)}`
           : MONTH_NAMES[date.getMonth()];
         return { key, label, count: 0, completed: 0 };
       });
-  };
+    };
 
-  const countMaintenancesPerSlot = (
-    slots: ReturnType<typeof buildSlots>,
-    maintenances: typeof this.maintenanceService.maintenances extends () => infer T ? T : never
-  ) => {
-    for (const maintenance of maintenances) {
-      const date = new Date(maintenance.scheduled_at);
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const slot = slots.find(s => s.key === key);
-      if (!slot) continue;
+    const countMaintenancesPerSlot = (
+      slots: ReturnType<typeof buildSlots>,
+      maintenances: ReturnType<typeof this.filteredMaintenances>
+    ) => {
+      for (const maintenance of maintenances) {
+        const date = new Date(maintenance.scheduled_at);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const slot = slots.find(s => s.key === key);
+        if (!slot) continue;
+        slot.count++;
+        if (maintenance.status === 'completed') slot.completed++;
+      }
+    };
 
-      slot.count++;
-      if (maintenance.status === 'completed') slot.completed++;
-    }
-  };
+    const addPercentages = (slots: ReturnType<typeof buildSlots>) => {
+      const max = Math.max(...slots.map(s => s.count), 1);
+      return slots.map(slot => ({
+        ...slot,
+        pct: Math.round((slot.count / max) * 100),
+      }));
+    };
 
-  const addPercentages = (slots: ReturnType<typeof buildSlots>) => {
-    const max = Math.max(...slots.map(s => s.count), 1);
-    return slots.map(slot => ({
-      ...slot,
-      pct: Math.round((slot.count / max) * 100),
-    }));
-  };
-
-  const slots = buildSlots();
-  countMaintenancesPerSlot(slots, this.maintenanceService.maintenances());
-  return addPercentages(slots);
-});
+    const slots = buildSlots();
+    countMaintenancesPerSlot(slots, this.filteredMaintenances());
+    return addPercentages(slots);
+  });
 
   readonly typeLabels: Record<string, string> = {
     preventive: 'Preventivo',
@@ -135,6 +143,11 @@ export class DashboardHomeComponent implements OnInit {
     completed:   'Completado',
     cancelled:   'Cancelado',
   };
+
+  selectMachine(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.selectedMachineId.set(value === '' ? null : Number(value));
+  }
 
   ngOnInit(): void {
     this.maintenanceService.load();

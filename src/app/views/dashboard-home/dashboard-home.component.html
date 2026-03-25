@@ -1,7 +1,31 @@
 <section class="dashboard-home">
   <header class="dashboard-home__header">
-    <h2 class="dashboard-home__title">Panel de control</h2>
-    <p class="dashboard-home__subtitle">Vista general de tus mantenimientos</p>
+    <div class="dashboard-home__heading">
+      <h2 class="dashboard-home__title">Panel de control</h2>
+      <p class="dashboard-home__subtitle">
+        @if (selectedMachineId() !== null) {
+          {{ machineMap().get(selectedMachineId()!) }}
+        } @else {
+          Vista general de tus mantenimientos
+        }
+      </p>
+    </div>
+
+    <div class="dashboard-home__filter">
+      <label for="machine-filter" class="dashboard-home__filter-label">Equipo</label>
+      <select
+        id="machine-filter"
+        class="dashboard-home__filter-select"
+        [value]="selectedMachineId() ?? ''"
+        (change)="selectMachine($event)"
+        aria-label="Filtrar por equipo"
+      >
+        <option value="">Todos los equipos</option>
+        @for (machine of machines(); track machine.id) {
+          <option [value]="machine.id">{{ machine.name }}</option>
+        }
+      </select>
+    </div>
   </header>
 
   @if (loading()) {

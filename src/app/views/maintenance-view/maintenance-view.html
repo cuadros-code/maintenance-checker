@@ -8,118 +8,220 @@
     }
   </header>
 
-  @if (maintenanceService.loading() || maintenanceService.maintenances().length === 0) {
+  @if (maintenanceService.loading()) {
     <app-empty-state
-      [loading]="maintenanceService.loading()"
+      [loading]="true"
       loadingText="Cargando mantenimientos…"
+      text=""
+    />
+  } @else if (maintenanceService.maintenances().length === 0) {
+    <app-empty-state
+      [loading]="false"
       text="No hay mantenimientos registrados."
     />
   } @else {
-    <div class="maintenance__table-wrapper" role="region" aria-label="Lista de mantenimientos">
-      <table class="maintenance__table">
-        <thead>
-          <tr>
-            <th scope="col">Equipo</th>
-            <th scope="col">Tipo</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Fecha programada</th>
-            <th scope="col">Asignado a</th>
-            <th scope="col">Tareas</th>
-            <th scope="col"><span class="sr-only">Acciones</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of maintenanceService.maintenances(); track item.id) {
+    <!-- Filters bar -->
+    <div class="filters-bar" role="search" aria-label="Filtrar mantenimientos">
+      <div class="filters-bar__search">
+        <svg class="filters-bar__search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+          <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input
+          class="filters-bar__input"
+          type="search"
+          placeholder="Buscar por equipo o descripción…"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+          aria-label="Buscar mantenimientos"
+        />
+      </div>
+
+      <select
+        class="filters-bar__select"
+        [value]="filterStatus()"
+        (change)="filterStatus.set($any($event.target).value)"
+        aria-label="Filtrar por estado"
+      >
+        <option value="">Todos los estados</option>
+        @for (opt of statusOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+
+      <select
+        class="filters-bar__select"
+        [value]="filterType()"
+        (change)="filterType.set($any($event.target).value)"
+        aria-label="Filtrar por tipo"
+      >
+        <option value="">Todos los tipos</option>
+        @for (opt of typeOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+
+      <div class="filters-bar__date-range">
+        <input
+          class="filters-bar__input filters-bar__input--date"
+          type="date"
+          [value]="filterDateFrom()"
+          (change)="filterDateFrom.set($any($event.target).value)"
+          aria-label="Desde"
+          title="Fecha desde"
+        />
+        <span class="filters-bar__date-sep" aria-hidden="true">—</span>
+        <input
+          class="filters-bar__input filters-bar__input--date"
+          type="date"
+          [value]="filterDateTo()"
+          (change)="filterDateTo.set($any($event.target).value)"
+          aria-label="Hasta"
+          title="Fecha hasta"
+        />
+      </div>
+
+      @if (activeFilterCount() > 0) {
+        <button
+          class="filters-bar__clear"
+          type="button"
+          (click)="clearFilters()"
+          [attr.aria-label]="'Limpiar ' + activeFilterCount() + ' filtros activos'"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          Limpiar
+          <span class="filters-bar__badge">{{ activeFilterCount() }}</span>
+        </button>
+      }
+    </div>
+
+    @if (filteredMaintenances().length === 0) {
+      <div class="filters-empty">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" stroke="#94a3b8" stroke-width="1.5"/>
+          <path d="M21 21l-4.35-4.35" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <p class="filters-empty__text">Sin resultados para los filtros aplicados.</p>
+        <button class="filters-empty__clear" type="button" (click)="clearFilters()">Limpiar filtros</button>
+      </div>
+    } @else {
+      <div class="maintenance__table-wrapper" role="region" aria-label="Lista de mantenimientos">
+        <div class="maintenance__table-meta">
+          <span class="maintenance__count" aria-live="polite" aria-atomic="true">
+            {{ filteredMaintenances().length }}
+            {{ filteredMaintenances().length === 1 ? 'resultado' : 'resultados' }}
+            @if (activeFilterCount() > 0) {
+              <span class="maintenance__count-filtered"> (filtrado)</span>
+            }
+          </span>
+        </div>
+        <table class="maintenance__table">
+          <thead>
             <tr>
-              <td data-label="Equipo">
-                @if (machineMap().get(item.machine_id); as machine) {
-                  <span class="maintenance__machine-code">{{ machine.code }}</span>
-                  {{ machine.name }}
-                } @else {
-                  <span class="maintenance__unknown">—</span>
-                }
-              </td>
-              <td data-label="Tipo">
-                <app-badge [variant]="item.type">{{ typeLabels[item.type] }}</app-badge>
-              </td>
-              <td data-label="Estado">
-                <app-badge [variant]="item.status">{{ statusLabels[item.status] }}</app-badge>
-              </td>
-              <td data-label="Fecha programada">{{ item.scheduled_at | date: 'dd/MM/yyyy HH:mm' }}</td>
-              <td data-label="Asignado a">
-                {{ userMap().get(item.assigned_user_id ?? '')?.email || '—' }}
-              </td>
-              <td data-label="Tareas" class="maintenance__task-count">
-                {{ item.task_count }}
-              </td>
-              <td class="maintenance__actions-cell">
-                <div class="maintenance__dropdown">
-                  <button
-                    class="maintenance__dropdown-toggle"
-                    type="button"
-                    [attr.aria-expanded]="openDropdownId() === item.id"
-                    [attr.aria-label]="'Acciones para mantenimiento de ' + (machineMap().get(item.machine_id)?.name ?? item.machine_id)"
-                    (click)="toggleDropdown(item.id, $event)"
-                  >
-                    &#8942;
-                  </button>
-                  @if (openDropdownId() === item.id) {
-                    <ul class="maintenance__dropdown-menu" role="menu"
-                      [style.top.px]="dropdownPos()!.top"
-                      [style.right.px]="dropdownPos()!.right"
+              <th scope="col">Equipo</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Fecha programada</th>
+              <th scope="col">Asignado a</th>
+              <th scope="col">Tareas</th>
+              <th scope="col"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of filteredMaintenances(); track item.id) {
+              <tr>
+                <td data-label="Equipo">
+                  @if (machineMap().get(item.machine_id); as machine) {
+                    <span class="maintenance__machine-code">{{ machine.code }}</span>
+                    {{ machine.name }}
+                  } @else {
+                    <span class="maintenance__unknown">—</span>
+                  }
+                </td>
+                <td data-label="Tipo">
+                  <app-badge [variant]="item.type">{{ typeLabels[item.type] }}</app-badge>
+                </td>
+                <td data-label="Estado">
+                  <app-badge [variant]="item.status">{{ statusLabels[item.status] }}</app-badge>
+                </td>
+                <td data-label="Fecha programada">{{ item.scheduled_at | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td data-label="Asignado a">
+                  {{ userMap().get(item.assigned_user_id ?? '')?.email || '—' }}
+                </td>
+                <td data-label="Tareas" class="maintenance__task-count">
+                  {{ item.task_count }}
+                </td>
+                <td class="maintenance__actions-cell">
+                  <div class="maintenance__dropdown">
+                    <button
+                      class="maintenance__dropdown-toggle"
+                      type="button"
+                      [attr.aria-expanded]="openDropdownId() === item.id"
+                      [attr.aria-label]="'Acciones para mantenimiento de ' + (machineMap().get(item.machine_id)?.name ?? item.machine_id)"
+                      (click)="toggleDropdown(item.id, $event)"
                     >
-                      <li role="none">
-                        <button
-                          class="maintenance__dropdown-item"
-                          type="button"
-                          role="menuitem"
-                          (click)="openEditModal(item)"
-                        >
-                          Editar mantenimiento
-                        </button>
-                      </li>
-                      <li role="none">
-                        <button
-                          class="maintenance__dropdown-item"
-                          type="button"
-                          role="menuitem"
-                          (click)="openTasksModal(item)"
-                        >
-                          Agregar tareas
-                        </button>
-                      </li>
-                      <li role="none">
-                        <button
-                          class="maintenance__dropdown-item"
-                          type="button"
-                          role="menuitem"
-                          (click)="goToTasks(item)"
-                        >
-                          Gestionar tareas
-                        </button>
-                      </li>
-                      @if (authStore.isAdmin()) {
-                        <li role="separator" class="maintenance__dropdown-separator"></li>
+                      &#8942;
+                    </button>
+                    @if (openDropdownId() === item.id) {
+                      <ul class="maintenance__dropdown-menu" role="menu"
+                        [style.top.px]="dropdownPos()!.top"
+                        [style.right.px]="dropdownPos()!.right"
+                      >
                         <li role="none">
                           <button
-                            class="maintenance__dropdown-item maintenance__dropdown-item--danger"
+                            class="maintenance__dropdown-item"
                             type="button"
                             role="menuitem"
-                            (click)="openDeleteConfirm(item)"
+                            (click)="openEditModal(item)"
                           >
-                            Eliminar mantenimiento
+                            Editar mantenimiento
                           </button>
                         </li>
-                      }
-                    </ul>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+                        <li role="none">
+                          <button
+                            class="maintenance__dropdown-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="openTasksModal(item)"
+                          >
+                            Agregar tareas
+                          </button>
+                        </li>
+                        <li role="none">
+                          <button
+                            class="maintenance__dropdown-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="goToTasks(item)"
+                          >
+                            Gestionar tareas
+                          </button>
+                        </li>
+                        @if (authStore.isAdmin()) {
+                          <li role="separator" class="maintenance__dropdown-separator"></li>
+                          <li role="none">
+                            <button
+                              class="maintenance__dropdown-item maintenance__dropdown-item--danger"
+                              type="button"
+                              role="menuitem"
+                              (click)="openDeleteConfirm(item)"
+                            >
+                              Eliminar mantenimiento
+                            </button>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   }
 </section>
 
@@ -337,7 +439,6 @@
           <span class="form-field__hint">Cargando usuarios…</span>
         }
       </div>
-
 
       <div class="form-field">
         <label class="form-field__label" for="description">Descripción</label>
