@@ -62,23 +62,27 @@
       </select>
 
       <div class="filters-bar__date-range">
-        <input
-          class="filters-bar__input filters-bar__input--date"
-          type="date"
-          [value]="filterDateFrom()"
-          (change)="filterDateFrom.set($any($event.target).value); onFilterChange()"
-          aria-label="Desde"
-          title="Fecha desde"
-        />
+        <div class="filters-bar__date-field">
+          <label class="filters-bar__date-label" for="filter-date-from">Desde</label>
+          <input
+            id="filter-date-from"
+            class="filters-bar__input filters-bar__input--date"
+            type="date"
+            [value]="filterDateFrom()"
+            (change)="filterDateFrom.set($any($event.target).value); onFilterChange()"
+          />
+        </div>
         <span class="filters-bar__date-sep" aria-hidden="true">—</span>
-        <input
-          class="filters-bar__input filters-bar__input--date"
-          type="date"
-          [value]="filterDateTo()"
-          (change)="filterDateTo.set($any($event.target).value); onFilterChange()"
-          aria-label="Hasta"
-          title="Fecha hasta"
-        />
+        <div class="filters-bar__date-field">
+          <label class="filters-bar__date-label" for="filter-date-to">Hasta</label>
+          <input
+            id="filter-date-to"
+            class="filters-bar__input filters-bar__input--date"
+            type="date"
+            [value]="filterDateTo()"
+            (change)="filterDateTo.set($any($event.target).value); onFilterChange()"
+          />
+        </div>
       </div>
 
       @if (activeFilterCount() > 0) {
