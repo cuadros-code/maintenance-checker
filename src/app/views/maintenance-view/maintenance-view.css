@@ -259,71 +259,6 @@
   border-width: 0;
 }
 
-/* Responsive: card layout on mobile */
-@media (max-width: 640px) {
-  .maintenance__table-wrapper {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    overflow-x: visible;
-  }
-
-  .maintenance__table,
-  .maintenance__table tbody {
-    display: block;
-  }
-
-  .maintenance__table thead {
-    display: none;
-  }
-
-  .maintenance__table tbody tr {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.875rem 1rem;
-    border-bottom: 1px solid #e5e7eb;
-    position: relative;
-  }
-
-  .maintenance__table tbody tr:last-child {
-    border-bottom: none;
-  }
-
-  .maintenance__table tbody tr:hover {
-    background: #f9fafb;
-  }
-
-  .maintenance__table td {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0;
-    border-bottom: none;
-  }
-
-  .maintenance__table td[data-label]::before {
-    content: attr(data-label);
-    font-size: 0.6875rem;
-    font-weight: 600;
-    color: #9ca3af;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .maintenance__actions-cell {
-    position: absolute;
-    top: 0.875rem;
-    right: 1rem;
-    width: auto;
-    text-align: initial;
-  }
-
-  .maintenance__actions-cell::before {
-    display: none;
-  }
-}
-
 /* Dropdown */
 .maintenance__dropdown {
   position: relative;
@@ -530,3 +465,78 @@
   color: #111827;
   margin: 0 0 0.25rem;
 }
+
+
+/* Responsive: card layout on mobile */
+@media (max-width: 640px) {
+  .maintenance__table-wrapper {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    overflow-x: visible;
+  }
+
+  .maintenance__table,
+  .maintenance__table tbody {
+    display: block;
+  }
+
+  .maintenance__table thead {
+    display: none;
+  }
+
+  .maintenance__table tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 3rem 1rem 1rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    position: relative;
+  }
+
+  .maintenance__table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .maintenance__table tbody tr:hover {
+    background: #f9fafb;
+  }
+
+  .maintenance__table td {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0;
+    border-bottom: none;
+  }
+
+  .maintenance__table td[data-label]::before {
+    content: attr(data-label);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .maintenance__actions-cell {
+    position: absolute;
+    top: 0.875rem;
+    right: 1rem;
+    width: auto;
+    text-align: initial;
+  }
+
+  .maintenance__actions-cell::before {
+    display: none;
+  }
+
+  .maintenance__dropdown-toggle {
+    color: #374151;
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    padding: 0.375rem 0.625rem;
+    font-size: 1.25rem;
+  }
+}
+

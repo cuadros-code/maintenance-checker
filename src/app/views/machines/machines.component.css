@@ -403,4 +403,12 @@
   .machines__actions-cell::before {
     display: none;
   }
+
+  .machines__dropdown-toggle {
+    color: #374151;
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    padding: 0.375rem 0.625rem;
+    font-size: 1.25rem;
+  }
 }

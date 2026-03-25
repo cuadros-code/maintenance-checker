@@ -891,7 +891,6 @@
   pointer-events: none;
 }
 
-/* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .tv__board {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -917,6 +916,18 @@
     min-width: 78vw;
     scroll-snap-align: start;
     flex-shrink: 0;
+  }
+
+  .tv__icon-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+    color: #4b5563;
+    background: #f3f4f6;
+  }
+
+  .tv__icon-btn--danger {
+    color: #dc2626;
+    background: #fef2f2;
   }
 
   .img-modal__gallery {
