@@ -57,6 +57,61 @@
       <a routerLink="/dashboard/maintenances" class="empty-state__cta">Crear mantenimiento</a>
     </div>
   } @else {
+    <!-- Upcoming alerts widget -->
+    @if (upcomingMaintenances().length > 0) {
+      <div class="upcoming-card" role="region" aria-label="Alertas de mantenimientos próximos">
+        <div class="upcoming-card__header">
+          <div class="upcoming-card__title-row">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="12" y1="9" x2="12" y2="13" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+              <line x1="12" y1="17" x2="12.01" y2="17" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <h3 class="upcoming-card__title">Próximos 7 días</h3>
+            <span class="upcoming-card__count">{{ upcomingMaintenances().length }}</span>
+          </div>
+          <a routerLink="/dashboard/mantenimientos" class="upcoming-card__link">Ver todos →</a>
+        </div>
+
+        <ul class="upcoming-list" aria-label="Mantenimientos próximos">
+          @for (m of upcomingMaintenances(); track m.id) {
+            <li class="upcoming-item">
+              <span
+                class="upcoming-item__days"
+                [class.upcoming-item__days--overdue]="daysUntil(m.scheduled_at) < 0"
+                [class.upcoming-item__days--urgent]="daysUntil(m.scheduled_at) >= 0 && daysUntil(m.scheduled_at) <= 2"
+                [class.upcoming-item__days--soon]="daysUntil(m.scheduled_at) > 2"
+                [attr.aria-label]="daysUntil(m.scheduled_at) < 0
+                  ? 'Vencido hace ' + (-daysUntil(m.scheduled_at)) + ' días'
+                  : daysUntil(m.scheduled_at) === 0
+                    ? 'Hoy'
+                    : 'En ' + daysUntil(m.scheduled_at) + ' días'"
+              >
+                @if (daysUntil(m.scheduled_at) < 0) {
+                  Vencido
+                } @else if (daysUntil(m.scheduled_at) === 0) {
+                  Hoy
+                } @else {
+                  {{ daysUntil(m.scheduled_at) }}d
+                }
+              </span>
+
+              <div class="upcoming-item__info">
+                <span class="upcoming-item__machine">
+                  {{ machineMap().get(m.machine_id) ?? '—' }}
+                </span>
+                <span class="upcoming-item__meta">
+                  {{ typeLabels[m.type] }} · {{ m.scheduled_at | date: 'dd/MM/yyyy' }}
+                </span>
+              </div>
+
+              <span [class]="'badge badge--status-' + m.status">{{ statusLabels[m.status] }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
     <!-- KPI cards -->
     <div class="kpi-grid">
       <article class="kpi-card kpi-card--total">

@@ -36,6 +36,13 @@
         >
           <span class="material-icons" aria-hidden="true">{{ item.icon }}</span>
           <span class="sidebar__label">{{ item.label }}</span>
+
+          @if (item.route === '/dashboard/mantenimientos' && upcomingCount() > 0) {
+            <span
+              class="sidebar__badge"
+              [attr.aria-label]="upcomingCount() + ' mantenimientos próximos o vencidos'"
+            >{{ upcomingCount() > 99 ? '99+' : upcomingCount() }}</span>
+          }
         </a>
       </li>
     }

@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 
 export type MaintenanceType = 'preventive' | 'corrective' | 'predictive';
@@ -39,6 +39,17 @@ export class MaintenanceService {
 
   readonly maintenances = this._maintenances.asReadonly();
   readonly loading = this._loading.asReadonly();
+
+  /** Mantenimientos pendientes/en-progreso con fecha ≤ hoy+7d (para badge del sidebar) */
+  readonly upcomingCount = computed(() => {
+    const in7days = new Date();
+    in7days.setDate(in7days.getDate() + 7);
+    in7days.setHours(23, 59, 59, 999);
+    return this._maintenances().filter(m => {
+      if (m.status !== 'pending' && m.status !== 'in_progress') return false;
+      return new Date(m.scheduled_at) <= in7days;
+    }).length;
+  });
 
   async load(): Promise<void> {
     if (this._loaded) return;

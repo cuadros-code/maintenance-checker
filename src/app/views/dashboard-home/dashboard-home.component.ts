@@ -27,6 +27,27 @@ export class DashboardHomeComponent implements OnInit {
     return id === null ? all : all.filter(m => m.machine_id === id);
   });
 
+  readonly upcomingMaintenances = computed(() => {
+    const in7days = new Date();
+    in7days.setDate(in7days.getDate() + 7);
+    in7days.setHours(23, 59, 59, 999);
+    return this.filteredMaintenances()
+      .filter(m => {
+        if (m.status !== 'pending' && m.status !== 'in_progress') return false;
+        return new Date(m.scheduled_at) <= in7days;
+      })
+      .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+      .slice(0, 5);
+  });
+
+  daysUntil(dateStr: string): number {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const date = new Date(dateStr);
+    date.setHours(0, 0, 0, 0);
+    return Math.round((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
   readonly total      = computed(() => this.filteredMaintenances().length);
   readonly pending    = computed(() => this.filteredMaintenances().filter(m => m.status === 'pending').length);
   readonly inProgress = computed(() => this.filteredMaintenances().filter(m => m.status === 'in_progress').length);
