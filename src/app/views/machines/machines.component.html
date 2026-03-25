@@ -32,7 +32,7 @@
           type="search"
           placeholder="Buscar por código, nombre o ubicación…"
           [value]="searchQuery()"
-          (input)="searchQuery.set($any($event.target).value)"
+          (input)="searchQuery.set($any($event.target).value); onFilterChange()"
           aria-label="Buscar equipos"
         />
       </div>
@@ -40,7 +40,7 @@
       <select
         class="filters-bar__select"
         [value]="filterStatus()"
-        (change)="filterStatus.set($any($event.target).value)"
+        (change)="filterStatus.set($any($event.target).value); onFilterChange()"
         aria-label="Filtrar por estado"
       >
         <option value="">Todos los estados</option>
@@ -78,8 +78,12 @@
       <div class="machines__table-wrapper" role="region" aria-label="Lista de equipos">
         <div class="machines__table-meta">
           <span class="machines__count" aria-live="polite" aria-atomic="true">
-            {{ filteredMachines().length }}
-            {{ filteredMachines().length === 1 ? 'resultado' : 'resultados' }}
+            @if (totalPages() > 1) {
+              {{ pageRange().start }}–{{ pageRange().end }} de {{ pageRange().total }} resultados
+            } @else {
+              {{ filteredMachines().length }}
+              {{ filteredMachines().length === 1 ? 'resultado' : 'resultados' }}
+            }
             @if (activeFilterCount() > 0) {
               <span class="machines__count-filtered"> (filtrado)</span>
             }
@@ -97,7 +101,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (machine of filteredMachines(); track machine.id) {
+            @for (machine of paginatedMachines(); track machine.id) {
               <tr>
                 <td data-label="Código">{{ machine.code }}</td>
                 <td data-label="Nombre">{{ machine.name }}</td>
@@ -140,6 +144,49 @@
             }
           </tbody>
         </table>
+
+        @if (totalPages() > 1) {
+          <div class="pagination" role="navigation" aria-label="Paginación">
+            <button
+              class="pagination__btn"
+              type="button"
+              (click)="prevPage()"
+              [disabled]="effectivePage() === 1"
+              aria-label="Página anterior"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+
+            @for (page of visiblePages(); track $index) {
+              @if (page === null) {
+                <span class="pagination__ellipsis" aria-hidden="true">…</span>
+              } @else {
+                <button
+                  class="pagination__page"
+                  type="button"
+                  (click)="goToPage(page)"
+                  [class.pagination__page--active]="page === effectivePage()"
+                  [attr.aria-current]="page === effectivePage() ? 'page' : null"
+                  [attr.aria-label]="'Página ' + page"
+                >{{ page }}</button>
+              }
+            }
+
+            <button
+              class="pagination__btn"
+              type="button"
+              (click)="nextPage()"
+              [disabled]="effectivePage() === totalPages()"
+              aria-label="Página siguiente"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        }
       </div>
     }
   }

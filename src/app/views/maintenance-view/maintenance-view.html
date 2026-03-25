@@ -32,7 +32,7 @@
           type="search"
           placeholder="Buscar por equipo o descripción…"
           [value]="searchQuery()"
-          (input)="searchQuery.set($any($event.target).value)"
+          (input)="searchQuery.set($any($event.target).value); onFilterChange()"
           aria-label="Buscar mantenimientos"
         />
       </div>
@@ -40,7 +40,7 @@
       <select
         class="filters-bar__select"
         [value]="filterStatus()"
-        (change)="filterStatus.set($any($event.target).value)"
+        (change)="filterStatus.set($any($event.target).value); onFilterChange()"
         aria-label="Filtrar por estado"
       >
         <option value="">Todos los estados</option>
@@ -52,7 +52,7 @@
       <select
         class="filters-bar__select"
         [value]="filterType()"
-        (change)="filterType.set($any($event.target).value)"
+        (change)="filterType.set($any($event.target).value); onFilterChange()"
         aria-label="Filtrar por tipo"
       >
         <option value="">Todos los tipos</option>
@@ -66,7 +66,7 @@
           class="filters-bar__input filters-bar__input--date"
           type="date"
           [value]="filterDateFrom()"
-          (change)="filterDateFrom.set($any($event.target).value)"
+          (change)="filterDateFrom.set($any($event.target).value); onFilterChange()"
           aria-label="Desde"
           title="Fecha desde"
         />
@@ -75,7 +75,7 @@
           class="filters-bar__input filters-bar__input--date"
           type="date"
           [value]="filterDateTo()"
-          (change)="filterDateTo.set($any($event.target).value)"
+          (change)="filterDateTo.set($any($event.target).value); onFilterChange()"
           aria-label="Hasta"
           title="Fecha hasta"
         />
@@ -110,8 +110,8 @@
       <div class="maintenance__table-wrapper" role="region" aria-label="Lista de mantenimientos">
         <div class="maintenance__table-meta">
           <span class="maintenance__count" aria-live="polite" aria-atomic="true">
-            {{ filteredMaintenances().length }}
-            {{ filteredMaintenances().length === 1 ? 'resultado' : 'resultados' }}
+            {{ pageRange().start }}–{{ pageRange().end }} de {{ pageRange().total }}
+            {{ pageRange().total === 1 ? 'resultado' : 'resultados' }}
             @if (activeFilterCount() > 0) {
               <span class="maintenance__count-filtered"> (filtrado)</span>
             }
@@ -130,7 +130,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (item of filteredMaintenances(); track item.id) {
+            @for (item of paginatedMaintenances(); track item.id) {
               <tr>
                 <td data-label="Equipo">
                   @if (machineMap().get(item.machine_id); as machine) {
@@ -220,6 +220,49 @@
             }
           </tbody>
         </table>
+
+        @if (totalPages() > 1) {
+          <div class="pagination" role="navigation" aria-label="Paginación">
+            <button
+              class="pagination__btn"
+              type="button"
+              (click)="prevPage()"
+              [disabled]="effectivePage() === 1"
+              aria-label="Página anterior"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+
+            @for (page of visiblePages(); track $index) {
+              @if (page === null) {
+                <span class="pagination__ellipsis" aria-hidden="true">…</span>
+              } @else {
+                <button
+                  class="pagination__page"
+                  type="button"
+                  (click)="goToPage(page)"
+                  [class.pagination__page--active]="page === effectivePage()"
+                  [attr.aria-current]="page === effectivePage() ? 'page' : null"
+                  [attr.aria-label]="'Página ' + page"
+                >{{ page }}</button>
+              }
+            }
+
+            <button
+              class="pagination__btn"
+              type="button"
+              (click)="nextPage()"
+              [disabled]="effectivePage() === totalPages()"
+              aria-label="Página siguiente"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        }
       </div>
     }
   }

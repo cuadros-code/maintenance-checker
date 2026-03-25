@@ -8,14 +8,19 @@ import { BadgeComponent } from '../../components/badge/badge.component';
 import { SpinnerComponent } from '../../components/spinner/spinner.component';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
 import { MachinesService } from '../../services/machines.service';
-import { MaintenanceService, MaintenanceType } from '../../services/maintenance.service';
+import { MaintenanceService } from '../../services/maintenance.service';
 import {
   MaintenanceTask,
   MaintenanceTaskPayload,
   MaintenanceTaskUpdatePayload,
   MaintenanceTasksService,
-  TaskStatus,
 } from '../../services/maintenance-tasks.service';
+import {
+  MaintenanceType,
+  TaskStatus,
+  MAINTENANCE_TYPE_LABELS,
+  TASK_STATUS_OPTIONS,
+} from '../../constants/domain.const';
 import { TaskImagesService } from '../../services/task-images.service';
 import { AuthStore } from '../../core/auth.store';
 
@@ -81,12 +86,7 @@ export class MaintenanceTasksView {
     return idx !== null && idx < this.imagesService.images().length - 1;
   });
 
-  readonly taskStatusOptions: { value: TaskStatus; label: string }[] = [
-    { value: 'pending',     label: 'Pendiente' },
-    { value: 'in_progress', label: 'En progreso' },
-    { value: 'completed',   label: 'Completado' },
-    { value: 'skipped',     label: 'Omitida' },
-  ];
+  readonly taskStatusOptions = TASK_STATUS_OPTIONS;
 
   readonly columns: { status: TaskStatus; label: string }[] = [
     { status: 'pending',     label: 'Pendiente'   },
@@ -107,11 +107,7 @@ export class MaintenanceTasksView {
     return map;
   });
 
-  readonly typeLabels: Record<MaintenanceType, string> = {
-    preventive: 'Preventivo',
-    corrective: 'Correctivo',
-    predictive: 'Predictivo',
-  };
+  readonly typeLabels = MAINTENANCE_TYPE_LABELS;
 
   readonly editForm = this.fb.group({
     title      : ['', Validators.required],

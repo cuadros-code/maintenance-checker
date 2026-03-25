@@ -1,1 +1,1 @@
-export type MachineStatus = 'active' | 'inactive' | 'under_maintenance';
+export type { MachineStatus } from './domain.const';

@@ -1,8 +1,9 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { MaintenanceService } from './maintenance.service';
+import { TaskStatus } from '../constants/domain.const';
 
-export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'skipped';
+export type { TaskStatus };
 
 export interface MaintenanceTask {
   id: number;

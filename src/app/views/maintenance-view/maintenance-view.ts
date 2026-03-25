@@ -9,17 +9,25 @@ import { EmptyStateComponent } from '../../components/empty-state/empty-state.co
 import { Machine, MachinesService } from '../../services/machines.service';
 import { AuthStore } from '../../core/auth.store';
 import {
+  MaintenanceType,
+  MaintenanceStatus,
+  TaskStatus,
+  MAINTENANCE_TYPE_LABELS,
+  MAINTENANCE_TYPE_OPTIONS,
+  MAINTENANCE_STATUS_LABELS,
+  MAINTENANCE_STATUS_OPTIONS,
+  TASK_STATUS_LABELS,
+  TASK_STATUS_OPTIONS,
+} from '../../constants/domain.const';
+import {
   Maintenance,
   MaintenancePayload,
   MaintenanceService,
-  MaintenanceStatus,
-  MaintenanceType,
   MaintenanceUpdatePayload,
 } from '../../services/maintenance.service';
 import {
   MaintenanceTasksService,
   MaintenanceTaskPayload,
-  TaskStatus,
 } from '../../services/maintenance-tasks.service';
 import { UsersService } from '../../services/users.service';
 
@@ -109,13 +117,55 @@ export class MaintenanceView {
     ].filter(Boolean).length
   );
 
+  // ── Pagination ───────────────────────────────────────────────────────────
+  readonly PAGE_SIZE = 10;
+  readonly currentPage = signal(1);
+
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filteredMaintenances().length / this.PAGE_SIZE))
+  );
+
+  readonly effectivePage = computed(() =>
+    Math.min(this.currentPage(), this.totalPages())
+  );
+
+  readonly paginatedMaintenances = computed(() => {
+    const start = (this.effectivePage() - 1) * this.PAGE_SIZE;
+    return this.filteredMaintenances().slice(start, start + this.PAGE_SIZE);
+  });
+
+  readonly pageRange = computed(() => {
+    const start = (this.effectivePage() - 1) * this.PAGE_SIZE + 1;
+    const end   = Math.min(this.effectivePage() * this.PAGE_SIZE, this.filteredMaintenances().length);
+    return { start, end, total: this.filteredMaintenances().length };
+  });
+
+  readonly visiblePages = computed<(number | null)[]>(() => {
+    const total   = this.totalPages();
+    const current = this.effectivePage();
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: (number | null)[] = [1];
+    if (current > 3)  pages.push(null);
+    for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) pages.push(p);
+    if (current < total - 2) pages.push(null);
+    pages.push(total);
+    return pages;
+  });
+
+  goToPage(page: number): void   { this.currentPage.set(page); }
+  prevPage(): void               { this.currentPage.update(p => Math.max(1, p - 1)); }
+  nextPage(): void               { this.currentPage.update(p => p + 1); }
+
   clearFilters(): void {
     this.searchQuery.set('');
     this.filterStatus.set('');
     this.filterType.set('');
     this.filterDateFrom.set('');
     this.filterDateTo.set('');
+    this.currentPage.set(1);
   }
+
+  onFilterChange(): void { this.currentPage.set(1); }
 
   // ── Computed labels / options ───────────────────────────────────────────
   readonly isEditing = computed(() => this.editingId() !== null);
@@ -127,38 +177,11 @@ export class MaintenanceView {
     return this.isEditing() ? 'Guardar cambios' : 'Programar';
   });
 
-  readonly typeOptions: { value: MaintenanceType; label: string }[] = [
-    { value: 'preventive', label: 'Preventivo' },
-    { value: 'corrective', label: 'Correctivo' },
-    { value: 'predictive', label: 'Predictivo' },
-  ];
-
-  readonly statusOptions: { value: MaintenanceStatus; label: string }[] = [
-    { value: 'pending',     label: 'Pendiente' },
-    { value: 'in_progress', label: 'En progreso' },
-    { value: 'completed',   label: 'Completado' },
-    { value: 'cancelled',   label: 'Cancelado' },
-  ];
-
-  readonly typeLabels: Record<MaintenanceType, string> = {
-    preventive: 'Preventivo',
-    corrective: 'Correctivo',
-    predictive: 'Predictivo',
-  };
-
-  readonly statusLabels: Record<MaintenanceStatus, string> = {
-    pending    : 'Pendiente',
-    in_progress: 'En progreso',
-    completed  : 'Completado',
-    cancelled  : 'Cancelado',
-  };
-
-  readonly taskStatusLabels: Record<TaskStatus, string> = {
-    pending    : 'Pendiente',
-    in_progress: 'En progreso',
-    completed  : 'Completado',
-    skipped    : 'Omitida',
-  };
+  readonly typeOptions    = MAINTENANCE_TYPE_OPTIONS;
+  readonly statusOptions  = MAINTENANCE_STATUS_OPTIONS;
+  readonly typeLabels     = MAINTENANCE_TYPE_LABELS;
+  readonly statusLabels   = MAINTENANCE_STATUS_LABELS;
+  readonly taskStatusLabels = TASK_STATUS_LABELS;
 
   readonly machineMap = computed(() =>
     new Map<number, Machine>(this.machinesService.machines().map(m => [m.id, m]))
@@ -179,12 +202,7 @@ export class MaintenanceView {
     assigned_user_id: [null as string | null],
   });
 
-  readonly taskStatusOptions: { value: TaskStatus; label: string }[] = [
-    { value: 'pending',     label: 'Pendiente' },
-    { value: 'in_progress', label: 'En progreso' },
-    { value: 'completed',   label: 'Completado' },
-    { value: 'skipped',     label: 'Omitida' },
-  ];
+  readonly taskStatusOptions = TASK_STATUS_OPTIONS;
 
   readonly taskForm = this.fb.group({
     title      : ['', Validators.required],

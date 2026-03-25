@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MaintenanceService } from '../../services/maintenance.service';
 import { MachinesService } from '../../services/machines.service';
+import { MAINTENANCE_TYPE_LABELS, MAINTENANCE_STATUS_LABELS } from '../../constants/domain.const';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -152,18 +153,8 @@ export class DashboardHomeComponent implements OnInit {
     return addPercentages(slots);
   });
 
-  readonly typeLabels: Record<string, string> = {
-    preventive: 'Preventivo',
-    corrective:  'Correctivo',
-    predictive:  'Predictivo',
-  };
-
-  readonly statusLabels: Record<string, string> = {
-    pending:     'Pendiente',
-    in_progress: 'En progreso',
-    completed:   'Completado',
-    cancelled:   'Cancelado',
-  };
+  readonly typeLabels   = MAINTENANCE_TYPE_LABELS;
+  readonly statusLabels = MAINTENANCE_STATUS_LABELS;
 
   selectMachine(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;

@@ -344,7 +344,7 @@
           <ul class="img-modal__pending-grid" aria-label="Archivos seleccionados">
             @for (file of pendingFiles(); track $index) {
               <li class="img-modal__pending-item">
-                <img [src]="pendingPreviews()[$index]" [alt]="file.name" class="img-modal__pending-img" />
+                <img [src]="pendingPreviews()[$index]" [alt]="file.name" class="img-modal__pending-img" loading="lazy" />
                 <button
                   class="img-modal__remove-btn"
                   type="button"

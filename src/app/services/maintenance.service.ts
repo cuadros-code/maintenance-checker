@@ -1,8 +1,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { MaintenanceType, MaintenanceStatus } from '../constants/domain.const';
 
-export type MaintenanceType = 'preventive' | 'corrective' | 'predictive';
-export type MaintenanceStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+export type { MaintenanceType, MaintenanceStatus };
 
 export interface Maintenance {
   id: number;

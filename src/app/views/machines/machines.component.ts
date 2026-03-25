@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { MachineStatus } from '../../constants/machines.const';
+import { MachineStatus, MACHINE_STATUS_LABELS, MACHINE_STATUS_OPTIONS } from '../../constants/domain.const';
 import { Machine, MachinesService } from '../../services/machines.service';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { AuthStore } from '../../core/auth.store';
@@ -52,23 +52,56 @@ export class MachinesComponent {
     [this.searchQuery().trim(), this.filterStatus()].filter(Boolean).length
   );
 
+  // ── Pagination ───────────────────────────────────────────────────────────
+  readonly PAGE_SIZE = 10;
+  readonly currentPage = signal(1);
+
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filteredMachines().length / this.PAGE_SIZE))
+  );
+
+  readonly effectivePage = computed(() =>
+    Math.min(this.currentPage(), this.totalPages())
+  );
+
+  readonly paginatedMachines = computed(() => {
+    const start = (this.effectivePage() - 1) * this.PAGE_SIZE;
+    return this.filteredMachines().slice(start, start + this.PAGE_SIZE);
+  });
+
+  readonly pageRange = computed(() => {
+    const start = (this.effectivePage() - 1) * this.PAGE_SIZE + 1;
+    const end   = Math.min(this.effectivePage() * this.PAGE_SIZE, this.filteredMachines().length);
+    return { start, end, total: this.filteredMachines().length };
+  });
+
+  readonly visiblePages = computed<(number | null)[]>(() => {
+    const total   = this.totalPages();
+    const current = this.effectivePage();
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: (number | null)[] = [1];
+    if (current > 3)  pages.push(null);
+    for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) pages.push(p);
+    if (current < total - 2) pages.push(null);
+    pages.push(total);
+    return pages;
+  });
+
+  goToPage(page: number): void { this.currentPage.set(page); }
+  prevPage(): void             { this.currentPage.update(p => Math.max(1, p - 1)); }
+  nextPage(): void             { this.currentPage.update(p => p + 1); }
+
   clearFilters(): void {
     this.searchQuery.set('');
     this.filterStatus.set('');
+    this.currentPage.set(1);
   }
 
-  // ── Options / labels ─────────────────────────────────────────────────────
-  readonly statusOptions: { value: MachineStatus; label: string }[] = [
-    { value: 'active',            label: 'Activo' },
-    { value: 'inactive',          label: 'Inactivo' },
-    { value: 'under_maintenance', label: 'En mantenimiento' },
-  ];
+  onFilterChange(): void { this.currentPage.set(1); }
 
-  readonly statusLabels: Record<MachineStatus, string> = {
-    active:            'Activo',
-    inactive:          'Inactivo',
-    under_maintenance: 'En mantenimiento',
-  };
+  // ── Options / labels ─────────────────────────────────────────────────────
+  readonly statusOptions = MACHINE_STATUS_OPTIONS;
+  readonly statusLabels  = MACHINE_STATUS_LABELS;
 
   readonly form = this.fb.group({
     code         : ['', [Validators.required, Validators.maxLength(50)]],
