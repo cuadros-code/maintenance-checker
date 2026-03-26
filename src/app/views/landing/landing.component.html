@@ -10,7 +10,11 @@
         </svg>
         <span>Revisor.io</span>
       </a>
-      <a class="lnav__cta" [routerLink]="['/login']">Iniciar sesión →</a>
+      <div class="lnav__links">
+        <a class="lnav__link" href="#features">Características</a>
+        <a class="lnav__link" href="#how">Cómo funciona</a>
+        <a class="lnav__cta" [routerLink]="['/login']">Iniciar sesión →</a>
+      </div>
     </div>
   </nav>
 
@@ -25,12 +29,12 @@
         </div>
 
         <h1 class="hero__title" id="hero-heading">
-          El mantenimiento de tu empresa,
+          El mantenimiento<br>de tu empresa,
           <span class="hero__title-gradient"> bajo control</span>
         </h1>
 
         <p class="hero__desc">
-          Programa, rastrea y gestiona todos los mantenimientos de tus equipos industriales desde una sola plataforma. Con roles, tareas y seguimiento en tiempo real.
+          Programa, rastrea y gestiona todos los mantenimientos de tus equipos industriales desde una sola plataforma. Roles, tareas y visibilidad en tiempo real.
         </p>
 
         <div class="hero__actions">
@@ -47,17 +51,17 @@
 
         <div class="hero__stats" role="list">
           <div class="hero__stat" role="listitem">
-            <!-- <strong class="hero__stat-val">3</strong> -->
+            <strong class="hero__stat-val"></strong>
             <span class="hero__stat-lbl">tipos de mantenimiento</span>
           </div>
           <div class="hero__stat-sep" aria-hidden="true"></div>
           <div class="hero__stat" role="listitem">
-            <!-- <strong class="hero__stat-val">3</strong> -->
+            <strong class="hero__stat-val"></strong>
             <span class="hero__stat-lbl">roles de usuario</span>
           </div>
           <div class="hero__stat-sep" aria-hidden="true"></div>
           <div class="hero__stat" role="listitem">
-            <!-- <strong class="hero__stat-val">100%</strong> -->
+            <strong class="hero__stat-val"></strong>
             <span class="hero__stat-lbl">en la nube</span>
           </div>
         </div>
@@ -70,35 +74,127 @@
             <span class="mockup__dot mockup__dot--red"></span>
             <span class="mockup__dot mockup__dot--yellow"></span>
             <span class="mockup__dot mockup__dot--green"></span>
-            <span class="mockup__chrome-title">Revisor.io — Mantenimientos</span>
+            <span class="mockup__chrome-title">Revisor.io — Dashboard</span>
           </div>
-          <div class="mockup__body">
-            <div class="mockup__toolbar">
-              <span class="mockup__toolbar-title">Mantenimientos</span>
-              <span class="mockup__toolbar-btn">+ Nuevo</span>
-            </div>
-            <div class="mockup__table">
-              <div class="mockup__thead">
-                <span>Equipo</span>
-                <span>Tipo</span>
-                <span>Estado</span>
-                <span class="mockup__col-date">Fecha</span>
+          <div class="mockup__layout">
+
+            <!-- Sidebar -->
+            <aside class="mockup__sidebar">
+              <div class="mockup__sidebar-brand">
+                <svg width="20" height="20" viewBox="0 0 30 30" fill="none">
+                  <rect width="30" height="30" rx="6" fill="#2563eb"/>
+                  <path d="M9 15l4.5 4.5 7.5-9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </div>
-              @for (row of mockupRows; track row.id) {
-                <div class="mockup__trow">
-                  <span class="mockup__cell-name">{{ row.equipo }}</span>
-                  <span [class]="'mockup__badge mockup__badge--' + row.tipo">{{ row.tipoLabel }}</span>
-                  <span [class]="'mockup__badge mockup__badge--' + row.estado">{{ row.estadoLabel }}</span>
-                  <span class="mockup__cell-date mockup__col-date">{{ row.fecha }}</span>
+              <nav class="mockup__sidebar-nav">
+                <span class="mockup__sidebar-item mockup__sidebar-item--active">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                  </svg>
+                </span>
+                <span class="mockup__sidebar-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </span>
+                <span class="mockup__sidebar-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </span>
+                <span class="mockup__sidebar-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                  </svg>
+                </span>
+              </nav>
+            </aside>
+
+            <!-- Main content -->
+            <div class="mockup__main">
+              <!-- KPI cards -->
+              <div class="mockup__kpis">
+                <div class="mockup__kpi mockup__kpi--total">
+                  <span class="mockup__kpi-val">24</span>
+                  <span class="mockup__kpi-lbl">Total</span>
                 </div>
-              }
+                <div class="mockup__kpi mockup__kpi--pending">
+                  <span class="mockup__kpi-val">8</span>
+                  <span class="mockup__kpi-lbl">Pendientes</span>
+                </div>
+                <div class="mockup__kpi mockup__kpi--progress">
+                  <span class="mockup__kpi-val">5</span>
+                  <span class="mockup__kpi-lbl">En progreso</span>
+                </div>
+                <div class="mockup__kpi mockup__kpi--done">
+                  <span class="mockup__kpi-val">11</span>
+                  <span class="mockup__kpi-lbl">Completados</span>
+                </div>
+              </div>
+
+              <!-- Table -->
+              <div class="mockup__toolbar">
+                <span class="mockup__toolbar-title">Mantenimientos</span>
+                <span class="mockup__toolbar-btn">+ Nuevo</span>
+              </div>
+              <div class="mockup__table">
+                <div class="mockup__thead">
+                  <span>Equipo</span>
+                  <span>Tipo</span>
+                  <span>Estado</span>
+                  <span class="mockup__col-date">Fecha</span>
+                </div>
+                @for (row of mockupRows; track row.id) {
+                  <div class="mockup__trow">
+                    <span class="mockup__cell-name">{{ row.equipo }}</span>
+                    <span [class]="'mockup__badge mockup__badge--' + row.tipo">{{ row.tipoLabel }}</span>
+                    <span [class]="'mockup__badge mockup__badge--' + row.estado">{{ row.estadoLabel }}</span>
+                    <span class="mockup__cell-date mockup__col-date">{{ row.fecha }}</span>
+                  </div>
+                }
+              </div>
             </div>
+
           </div>
         </div>
       </div>
 
     </div>
   </section>
+
+  <!-- ── Trust strip ── -->
+  <div class="trust-strip" aria-hidden="true">
+    <div class="trust-strip__container">
+      <span class="trust-strip__item">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Preventivo
+      </span>
+      <span class="trust-strip__sep" aria-hidden="true">·</span>
+      <span class="trust-strip__item">Correctivo</span>
+      <span class="trust-strip__sep" aria-hidden="true">·</span>
+      <span class="trust-strip__item">Predictivo</span>
+      <span class="trust-strip__sep" aria-hidden="true">·</span>
+      <span class="trust-strip__item">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+        roles de usuario
+      </span>
+      <span class="trust-strip__sep" aria-hidden="true">·</span>
+      <span class="trust-strip__item">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Seguimiento en tiempo real
+      </span>
+      <span class="trust-strip__sep" aria-hidden="true">·</span>
+      <span class="trust-strip__item">100% en la nube</span>
+    </div>
+  </div>
 
   <!-- ── Features ── -->
   <section class="feats" id="features" aria-labelledby="feats-heading">
@@ -183,8 +279,96 @@
     </div>
   </section>
 
+  <!-- ── Metrics showcase ── -->
+  <section class="metrics" aria-labelledby="metrics-heading">
+    <div class="metrics__container">
+      <header class="metrics__header">
+        <span class="section-eyebrow">Panel de control</span>
+        <h2 class="metrics__title" id="metrics-heading">Visibilidad total de tu operación</h2>
+        <p class="metrics__sub">Consulta el estado de todos tus mantenimientos de un vistazo con indicadores claros y actualizados en tiempo real.</p>
+      </header>
+
+      <div class="metrics__kpis">
+        <div class="metric-card metric-card--total">
+          <div class="metric-card__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+          </div>
+          <div class="metric-card__body">
+            <span class="metric-card__label">Total registrados</span>
+            <span class="metric-card__value">24</span>
+          </div>
+        </div>
+
+        <div class="metric-card metric-card--pending">
+          <div class="metric-card__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="metric-card__body">
+            <span class="metric-card__label">Pendientes</span>
+            <span class="metric-card__value">8</span>
+          </div>
+        </div>
+
+        <div class="metric-card metric-card--progress">
+          <div class="metric-card__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </div>
+          <div class="metric-card__body">
+            <span class="metric-card__label">En progreso</span>
+            <span class="metric-card__value">5</span>
+          </div>
+        </div>
+
+        <div class="metric-card metric-card--done">
+          <div class="metric-card__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div class="metric-card__body">
+            <span class="metric-card__label">Completados</span>
+            <span class="metric-card__value">11</span>
+            <span class="metric-card__rate">46% tasa de éxito</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini type bars -->
+      <div class="metrics__bars" aria-hidden="true">
+        <div class="metrics__bar-row">
+          <span class="metrics__bar-label">Preventivo</span>
+          <div class="metrics__bar-track">
+            <div class="metrics__bar-fill metrics__bar-fill--preventive" style="width: 75%"></div>
+          </div>
+          <span class="metrics__bar-count">18</span>
+        </div>
+        <div class="metrics__bar-row">
+          <span class="metrics__bar-label">Correctivo</span>
+          <div class="metrics__bar-track">
+            <div class="metrics__bar-fill metrics__bar-fill--corrective" style="width: 25%"></div>
+          </div>
+          <span class="metrics__bar-count">6</span>
+        </div>
+        <div class="metrics__bar-row">
+          <span class="metrics__bar-label">Predictivo</span>
+          <div class="metrics__bar-track">
+            <div class="metrics__bar-fill metrics__bar-fill--predictive" style="width: 42%"></div>
+          </div>
+          <span class="metrics__bar-count">10</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ── Steps ── -->
-  <section class="steps" aria-labelledby="steps-heading">
+  <section class="steps" id="how" aria-labelledby="steps-heading">
     <div class="steps__container">
       <header class="steps__header">
         <span class="section-eyebrow">Cómo funciona</span>
@@ -222,7 +406,7 @@
         ¿Listo para llevar tu mantenimiento al siguiente nivel?
       </h2>
       <p class="cta__sub">
-        Comienza hoy mismo, sin tarjeta de crédito ni contratos. Solo resultados.
+        Comienza hoy mismo.
       </p>
       <a class="cta__btn" [routerLink]="['/login']">
         Empezar gratis
@@ -243,7 +427,7 @@
         </svg>
         Revisor.io
       </a>
-      <p class="lfooter__copy">© 2025 Revisor.io. Gestión industrial simplificada.</p>
+      <p class="lfooter__copy">© 2026 Revisor.io. Gestión industrial simplificada.</p>
     </div>
   </footer>
 
