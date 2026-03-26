@@ -1,11 +1,66 @@
 <section class="maintenance">
   <header class="maintenance__header">
     <h1 class="maintenance__title">Mantenimientos</h1>
-    @if (authStore.isAdmin()) {
-      <app-button (click)="openModal()">
-        Programar mantenimiento
-      </app-button>
-    }
+    <div class="maintenance__header-actions">
+      @if (filteredMaintenances().length > 0 && !maintenanceService.loading()) {
+        <div class="export-menu">
+          <button
+            class="export-menu__trigger"
+            type="button"
+            [attr.aria-expanded]="exportMenuOpen()"
+            aria-haspopup="true"
+            (click)="toggleExportMenu($event)"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Exportar
+            <span class="export-menu__count">{{ filteredMaintenances().length }}</span>
+            <svg class="export-menu__chevron" [class.export-menu__chevron--open]="exportMenuOpen()" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          @if (exportMenuOpen()) {
+            <ul class="export-menu__list" role="menu">
+              <li role="none">
+                <button class="export-menu__item" type="button" role="menuitem" (click)="exportCsv()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                  <span>
+                    <strong>Exportar CSV</strong>
+                    <small>Compatible con Excel</small>
+                  </span>
+                </button>
+              </li>
+              <li role="none">
+                <button class="export-menu__item" type="button" role="menuitem" (click)="exportPdf()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="15" x2="15" y2="15"/>
+                  </svg>
+                  <span>
+                    <strong>Exportar PDF</strong>
+                    <small>Reporte imprimible</small>
+                  </span>
+                </button>
+              </li>
+            </ul>
+          }
+        </div>
+      }
+      @if (authStore.isAdmin()) {
+        <app-button (click)="openModal()">
+          Programar mantenimiento
+        </app-button>
+      }
+    </div>
   </header>
 
   @if (maintenanceService.loading()) {

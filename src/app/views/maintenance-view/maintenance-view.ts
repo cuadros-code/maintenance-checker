@@ -30,6 +30,7 @@ import {
   MaintenanceTaskPayload,
 } from '../../services/maintenance-tasks.service';
 import { UsersService } from '../../services/users.service';
+import { MaintenanceExportService } from '../../services/maintenance-export.service';
 
 @Component({
   selector: 'app-maintenance-view',
@@ -49,6 +50,7 @@ export class MaintenanceView {
   readonly tasksService = inject(MaintenanceTasksService);
   readonly authStore = inject(AuthStore);
   readonly usersService = inject(UsersService);
+  private readonly exportService = inject(MaintenanceExportService);
 
   // ── Modals / UI state ───────────────────────────────────────────────────
   readonly modalOpen = signal(false);
@@ -58,6 +60,7 @@ export class MaintenanceView {
   readonly dropdownPos = signal<{ top: number; right: number } | null>(null);
   readonly deleteTargetId = signal<number | null>(null);
   readonly deleting = signal(false);
+  readonly exportMenuOpen = signal(false);
 
   readonly tasksModalItem = signal<Maintenance | null>(null);
   readonly tasksModalOpen = computed(() => this.tasksModalItem() !== null);
@@ -105,6 +108,16 @@ export class MaintenanceView {
 
       return true;
     });
+  });
+
+  readonly filterSummary = computed(() => {
+    const parts: string[] = [];
+    if (this.filterStatus()) parts.push(`Estado: ${this.statusLabels[this.filterStatus() as MaintenanceStatus]}`);
+    if (this.filterType())   parts.push(`Tipo: ${this.typeLabels[this.filterType() as MaintenanceType]}`);
+    if (this.filterDateFrom()) parts.push(`Desde: ${this.filterDateFrom()}`);
+    if (this.filterDateTo())   parts.push(`Hasta: ${this.filterDateTo()}`);
+    if (this.searchQuery().trim()) parts.push(`Búsqueda: "${this.searchQuery().trim()}"`);
+    return parts.join(' · ');
   });
 
   readonly activeFilterCount = computed(() =>
@@ -212,6 +225,31 @@ export class MaintenanceView {
   });
 
   readonly minScheduledAt = toLocalDateTimeString(new Date());
+
+  // ── Export ──────────────────────────────────────────────────────────────
+  private exportData() {
+    return {
+      maintenances: this.filteredMaintenances(),
+      machineMap:   this.machineMap(),
+      userMap:      this.userMap(),
+      filterSummary: this.filterSummary(),
+    };
+  }
+
+  exportCsv(): void {
+    this.exportMenuOpen.set(false);
+    this.exportService.exportCsv(this.exportData());
+  }
+
+  exportPdf(): void {
+    this.exportMenuOpen.set(false);
+    this.exportService.exportPdf(this.exportData());
+  }
+
+  toggleExportMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.exportMenuOpen.update(v => !v);
+  }
 
   constructor() {
     this.machinesService.load();
@@ -326,6 +364,9 @@ export class MaintenanceView {
     const target = event.target as HTMLElement;
     if (!target.closest('.maintenance__dropdown')) {
       this.openDropdownId.set(null);
+    }
+    if (!target.closest('.export-menu')) {
+      this.exportMenuOpen.set(false);
     }
   }
 

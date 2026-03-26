@@ -16,7 +16,11 @@ interface MockupRow {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
   templateUrl: './landing.component.html',
-  styleUrl: './landing.component.css',
+  styleUrls: [
+    './landing.component.css',
+    './landing.hero.css',
+    './landing.sections.css',
+  ],
 })
 export class LandingComponent {
   readonly mockupRows: MockupRow[] = [
