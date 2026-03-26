@@ -1,4 +1,27 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+
+interface VoiceSpeechResult {
+  readonly isFinal: boolean;
+  readonly 0: { readonly transcript: string };
+}
+interface VoiceSpeechResultList {
+  readonly length: number;
+  readonly [i: number]: VoiceSpeechResult;
+}
+interface VoiceSpeechEvent extends Event {
+  readonly results: VoiceSpeechResultList;
+}
+interface VoiceSpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((e: VoiceSpeechEvent) => void) | null;
+  onerror: ((e: Event) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+}
+type VoiceSpeechRecognitionCtor = new () => VoiceSpeechRecognition;
 import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
@@ -29,6 +52,7 @@ import {
   MaintenanceTasksService,
   MaintenanceTaskPayload,
 } from '../../services/maintenance-tasks.service';
+import { TASK_TEMPLATES, TaskTemplate } from '../../constants/task-templates.const';
 import { UsersService } from '../../services/users.service';
 import { MaintenanceExportService } from '../../services/maintenance-export.service';
 
@@ -65,6 +89,21 @@ export class MaintenanceView {
   readonly tasksModalItem = signal<Maintenance | null>(null);
   readonly tasksModalOpen = computed(() => this.tasksModalItem() !== null);
   readonly taskSubmitting = signal(false);
+  readonly minDate = new Date();
+
+  readonly templatePickerOpen = signal(false);
+  readonly applyingTemplateId = signal<string | null>(null);
+  readonly taskTemplates = TASK_TEMPLATES;
+
+  // ── Voice input ─────────────────────────────────────────────────────────
+  readonly recordingField = signal<'description' | 'notes' | null>(null);
+  readonly voiceSupported: boolean =
+    typeof window !== 'undefined' &&
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+  private recognition: VoiceSpeechRecognition | null = null;
+  private isRecording = false;
+  private voiceBaseText = '';
 
   // ── Filters ─────────────────────────────────────────────────────────────
   readonly searchQuery  = signal('');
@@ -212,7 +251,7 @@ export class MaintenanceView {
     description     : [''],
     scheduled_at    : ['', Validators.required],
     notes           : [''],
-    assigned_user_id: [null as string | null],
+    assigned_user_id: [null as string | null, Validators.required],
   });
 
   readonly taskStatusOptions = TASK_STATUS_OPTIONS;
@@ -313,11 +352,36 @@ export class MaintenanceView {
     this.openDropdownId.set(null);
     this.tasksModalItem.set(item);
     this.taskForm.reset({ status: 'pending' });
+    this.templatePickerOpen.set(false);
     this.tasksService.loadForMaintenance(item.id);
   }
 
   closeTasksModal(): void {
     this.tasksModalItem.set(null);
+    this.templatePickerOpen.set(false);
+  }
+
+  async applyTemplate(template: TaskTemplate): Promise<void> {
+    const item = this.tasksModalItem();
+    if (!item || this.applyingTemplateId() !== null) return;
+    this.applyingTemplateId.set(template.id);
+    const baseIndex = this.tasksService.tasks().length;
+    try {
+      for (let i = 0; i < template.steps.length; i++) {
+        const payload: MaintenanceTaskPayload = {
+          maintenance_id: item.id,
+          title        : template.steps[i].title,
+          description  : template.steps[i].description,
+          order_index  : baseIndex + i,
+          status       : 'pending',
+          notes        : null,
+        };
+        await this.tasksService.create(payload);
+      }
+      this.templatePickerOpen.set(false);
+    } finally {
+      this.applyingTemplateId.set(null);
+    }
   }
 
   async submitTask(): Promise<void> {
@@ -345,6 +409,81 @@ export class MaintenanceView {
       if (!error) this.taskForm.reset({ status: 'pending' });
     } finally {
       this.taskSubmitting.set(false);
+    }
+  }
+
+  toggleVoiceInput(field: 'description' | 'notes'): void {
+    if (this.recordingField() === field) {
+      this.stopVoiceInput();
+    } else {
+      this.startVoiceInput(field);
+    }
+  }
+
+  private startVoiceInput(field: 'description' | 'notes'): void {
+    if (this.isRecording) return;
+
+    const win = window as unknown as Record<string, VoiceSpeechRecognitionCtor | undefined>;
+    const Ctor = win['SpeechRecognition'] ?? win['webkitSpeechRecognition'];
+    if (!Ctor) return;
+
+    this.isRecording = true;
+    this.voiceBaseText = (this.form.controls[field].value ?? '').trimEnd();
+    this.recordingField.set(field);
+
+    const start = (): void => {
+      const r = new Ctor();
+      r.lang = 'es-ES';
+      r.continuous = true;
+      r.interimResults = true;
+
+      r.onresult = (e: VoiceSpeechEvent) => {
+        let finals = this.voiceBaseText;
+        let interim = '';
+        for (let i = 0; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) {
+            finals = [finals, t].filter(Boolean).join(' ');
+          } else {
+            interim = t;
+          }
+        }
+        this.voiceBaseText = finals;
+        const display = [finals, interim].filter(Boolean).join(' ');
+        this.form.controls[field].setValue(display, { emitEvent: false });
+      };
+
+      r.onerror = (e: Event) => {
+        const err = (e as unknown as { error?: string }).error;
+        // 'no-speech' = silence detected (restart), 'aborted' = we called stop() ourselves
+        if (err === 'no-speech' || err === 'aborted') return;
+        if (this.isRecording) this.stopVoiceInput();
+      };
+
+      r.onend = () => {
+        if (this.isRecording) {
+          // Delay avoids rapid-restart loop when browser auto-stops
+          setTimeout(() => {
+            if (this.isRecording) {
+              try { start(); } catch { this.stopVoiceInput(); }
+            }
+          }, 150);
+        }
+      };
+
+      r.start();
+      this.recognition = r;
+    };
+
+    start();
+  }
+
+  stopVoiceInput(): void {
+    this.isRecording = false;
+    this.recordingField.set(null);
+    if (this.recognition) {
+      try { this.recognition.stop(); } catch { /* already stopped */ }
+      this.recognition = null;
     }
   }
 
