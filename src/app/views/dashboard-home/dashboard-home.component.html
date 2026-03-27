@@ -267,6 +267,87 @@
       </div>
     </div>
 
+    <!-- Insights row -->
+    <div class="insights-grid">
+
+      <!-- Vencidos -->
+      <div class="insight-card" [class.insight-card--alert]="overdue() > 0">
+        <div class="insight-card__header">
+          <div class="insight-card__icon insight-card__icon--overdue" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <h3 class="insight-card__title">Vencidos</h3>
+        </div>
+        <div class="insight-card__value" [class.insight-card__value--alert]="overdue() > 0">
+          {{ overdue() }}
+        </div>
+        <p class="insight-card__desc">
+          @if (overdue() === 0) {
+            Sin mantenimientos vencidos
+          } @else {
+            mantenimiento{{ overdue() !== 1 ? 's' : '' }} sin completar con fecha pasada
+          }
+        </p>
+      </div>
+
+      <!-- Tiempo promedio de resolución -->
+      <div class="insight-card">
+        <div class="insight-card__header">
+          <div class="insight-card__icon insight-card__icon--time" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <h3 class="insight-card__title">Tiempo prom. resolución</h3>
+        </div>
+        @if (avgResolutionTime(); as avg) {
+          <div class="insight-card__value">
+            {{ avg.value }}<span class="insight-card__unit">{{ avg.unit }}</span>
+          </div>
+          <p class="insight-card__desc">promedio en {{ avg.count }} mantenimiento{{ avg.count !== 1 ? 's' : '' }} completado{{ avg.count !== 1 ? 's' : '' }}</p>
+        } @else {
+          <div class="insight-card__value insight-card__value--empty">—</div>
+          <p class="insight-card__desc">Requiere mantenimientos con fecha de inicio y fin</p>
+        }
+      </div>
+
+      <!-- Máquinas con más incidencias -->
+      <div class="insight-card insight-card--wide">
+        <div class="insight-card__header">
+          <div class="insight-card__icon insight-card__icon--machines" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+            </svg>
+          </div>
+          <h3 class="insight-card__title">Máquinas con más incidencias</h3>
+        </div>
+        @if (topMachinesByIncidence().length > 0) {
+          <ul class="machine-ranking" aria-label="Ranking de máquinas por incidencias">
+            @for (machine of topMachinesByIncidence(); track machine.name; let idx = $index) {
+              <li class="machine-rank-row">
+                <span class="machine-rank-row__pos" aria-hidden="true">{{ idx + 1 }}</span>
+                <span class="machine-rank-row__name">{{ machine.name }}</span>
+                <div class="machine-rank-row__bar-track" role="presentation">
+                  <div class="machine-rank-row__bar-fill" [style.--pct]="machine.pct + '%'"></div>
+                </div>
+                <span class="machine-rank-row__count" [attr.aria-label]="machine.total + ' mantenimientos, ' + machine.corrective + ' correctivos'">
+                  {{ machine.total }}
+                  @if (machine.corrective > 0) {
+                    <span class="machine-rank-row__corrective">{{ machine.corrective }}c</span>
+                  }
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="insight-card__desc">Sin datos suficientes</p>
+        }
+      </div>
+
+    </div>
+
     <!-- Recent maintenances -->
     <div class="recent-card">
       <div class="recent-card__header">

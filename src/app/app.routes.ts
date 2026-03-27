@@ -39,6 +39,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./views/users-view/users-view').then((m) => m.UsersView),
       },
+      {
+        path: 'calendario',
+        loadComponent: () =>
+          import('./views/calendar-view/calendar-view').then((m) => m.CalendarView),
+      },
     ],
   },
   {

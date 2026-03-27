@@ -153,6 +153,44 @@ export class DashboardHomeComponent implements OnInit {
     return addPercentages(slots);
   });
 
+  readonly overdue = computed(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return this.filteredMaintenances().filter(m => {
+      if (m.status !== 'pending' && m.status !== 'in_progress') return false;
+      return new Date(m.scheduled_at) < today;
+    }).length;
+  });
+
+  readonly avgResolutionTime = computed(() => {
+    const completed = this.filteredMaintenances().filter(
+      m => m.status === 'completed' && m.started_at && m.completed_at
+    );
+    if (completed.length === 0) return null;
+    const totalMs = completed.reduce((sum, m) => {
+      return sum + (new Date(m.completed_at!).getTime() - new Date(m.started_at!).getTime());
+    }, 0);
+    const avgHours = totalMs / completed.length / (1000 * 60 * 60);
+    if (avgHours < 24) {
+      return { value: Math.round(avgHours), unit: 'h', count: completed.length };
+    }
+    return { value: Math.round((avgHours / 24) * 10) / 10, unit: 'd', count: completed.length };
+  });
+
+  readonly topMachinesByIncidence = computed(() => {
+    const counts = new Map<number, { name: string; total: number; corrective: number }>();
+    for (const m of this.filteredMaintenances()) {
+      const name = this.machineMap().get(m.machine_id) ?? '—';
+      const entry = counts.get(m.machine_id) ?? { name, total: 0, corrective: 0 };
+      entry.total++;
+      if (m.type === 'corrective') entry.corrective++;
+      counts.set(m.machine_id, entry);
+    }
+    const sorted = [...counts.values()].sort((a, b) => b.total - a.total).slice(0, 5);
+    const max = sorted[0]?.total ?? 1;
+    return sorted.map(e => ({ ...e, pct: Math.round((e.total / max) * 100) }));
+  });
+
   readonly typeLabels   = MAINTENANCE_TYPE_LABELS;
   readonly statusLabels = MAINTENANCE_STATUS_LABELS;
 

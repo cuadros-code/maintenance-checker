@@ -24,10 +24,11 @@ export class SidebarComponent {
   readonly upcomingCount = this.maintenanceService.upcomingCount;
 
   readonly navItems: NavItem[] = [
-    { label: 'Dashboard',       route: '/dashboard',                 icon: 'dashboard' },
-    { label: 'Mantenimientos',  route: '/dashboard/mantenimientos',  icon: 'settings'  },
-    { label: 'Equipos',         route: '/dashboard/equipos',         icon: 'build'     },
-    { label: 'Técnicos',        route: '/dashboard/usuarios',        icon: 'groups'    },
+    { label: 'Dashboard',       route: '/dashboard',                 icon: 'dashboard'        },
+    { label: 'Mantenimientos',  route: '/dashboard/mantenimientos',  icon: 'settings'         },
+    { label: 'Calendario',      route: '/dashboard/calendario',      icon: 'calendar_month'   },
+    { label: 'Equipos',         route: '/dashboard/equipos',         icon: 'build'            },
+    { label: 'Técnicos',        route: '/dashboard/usuarios',        icon: 'groups'           },
   ];
 
   constructor() {

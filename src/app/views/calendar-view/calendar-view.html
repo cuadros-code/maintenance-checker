@@ -1,0 +1,253 @@
+<section class="cal">
+
+  <!-- ── Header ── -->
+  <header class="cal__header">
+    <div class="cal__nav" (click)="$event.stopPropagation()">
+      <button class="cal__btn cal__btn--today" type="button" (click)="goToToday()">Hoy</button>
+      <div class="cal__arrow-group">
+        <button class="cal__btn cal__btn--arrow" type="button" (click)="prev()" aria-label="Anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <button class="cal__btn cal__btn--arrow" type="button" (click)="next()" aria-label="Siguiente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+      <h2 class="cal__title">{{ headerLabel() }}</h2>
+    </div>
+
+    <div class="cal__controls" (click)="$event.stopPropagation()">
+      <select
+        class="cal__select"
+        [value]="selectedMachineId() ?? ''"
+        (change)="selectMachine($event)"
+        aria-label="Filtrar por equipo"
+      >
+        <option value="">Todos los equipos</option>
+        @for (m of machines(); track m.id) {
+          <option [value]="m.id">{{ m.name }}</option>
+        }
+      </select>
+
+      <div class="cal__view-toggle" role="group" aria-label="Tipo de vista">
+        <button
+          class="cal__toggle-btn"
+          [class.cal__toggle-btn--active]="view() === 'month'"
+          type="button"
+          (click)="setView('month')"
+          aria-pressed="{{ view() === 'month' }}"
+        >Mes</button>
+        <button
+          class="cal__toggle-btn"
+          [class.cal__toggle-btn--active]="view() === 'week'"
+          type="button"
+          (click)="setView('week')"
+          aria-pressed="{{ view() === 'week' }}"
+        >Semana</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Loading skeleton ── -->
+  @if (loading()) {
+    <div class="cal__skeleton" aria-busy="true" aria-label="Cargando calendario">
+      <div class="cal__skeleton-header">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <div class="cal__skeleton-cell cal__skeleton-cell--head"></div>
+        }
+      </div>
+      <div class="cal__skeleton-grid">
+        @for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35]; track i) {
+          <div class="cal__skeleton-cell"></div>
+        }
+      </div>
+    </div>
+  } @else {
+
+    <!-- ── Day names row ── -->
+    <div class="cal__day-names" role="row">
+      @for (name of dayNames; track name) {
+        <div class="cal__day-name" role="columnheader">{{ name }}</div>
+      }
+    </div>
+
+    <!-- ── Monthly view ── -->
+    @if (view() === 'month') {
+      <div
+        class="cal__grid-month"
+        role="grid"
+        [style.--rows]="calendarRows()"
+        aria-label="Calendario mensual"
+      >
+        @for (day of calendarDays(); track day.iso) {
+          <div
+            class="cal__cell"
+            role="gridcell"
+            [class.cal__cell--other-month]="!day.isCurrentMonth"
+            [class.cal__cell--today]="day.isToday"
+            [class.cal__cell--weekend]="day.isWeekend"
+            [attr.aria-label]="day.date.getDate() + ' - ' + day.events.length + ' mantenimientos'"
+          >
+            <span class="cal__cell-num">{{ day.date.getDate() }}</span>
+
+            <div class="cal__chips">
+              @for (ev of day.events.slice(0, MAX_CHIPS); track ev.id) {
+                <button
+                  class="cal__chip"
+                  [class.cal__chip--overdue]="isOverdue(ev)"
+                  [class]="'cal__chip cal__chip--' + ev.status + (isOverdue(ev) ? ' cal__chip--overdue' : '')"
+                  type="button"
+                  (click)="openDetail($event, ev)"
+                  [attr.aria-label]="(machineMap().get(ev.machine_id) ?? '—') + ': ' + statusLabels[ev.status]"
+                  [attr.aria-pressed]="selectedEvent()?.id === ev.id"
+                >
+                  <span class="cal__chip-dot" aria-hidden="true"></span>
+                  <span class="cal__chip-label">{{ machineMap().get(ev.machine_id) ?? '—' }}</span>
+                </button>
+              }
+              @if (day.events.length > MAX_CHIPS) {
+                <button
+                  class="cal__chip-more"
+                  type="button"
+                  (click)="openDetail($event, day.events[MAX_CHIPS])"
+                  [attr.aria-label]="(day.events.length - MAX_CHIPS) + ' mantenimientos más'"
+                >
+                  +{{ day.events.length - MAX_CHIPS }} más
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ── Weekly view ── -->
+    @if (view() === 'week') {
+      <div class="cal__grid-week" role="grid" aria-label="Calendario semanal">
+        @for (day of weekDays(); track day.iso) {
+          <div
+            class="cal__week-col"
+            role="gridcell"
+            [class.cal__week-col--today]="day.isToday"
+            [class.cal__week-col--weekend]="day.isWeekend"
+          >
+            <div class="cal__week-col-header">
+              <span class="cal__week-day-name">{{ dayNames[day.date.getDay() === 0 ? 6 : day.date.getDay() - 1] }}</span>
+              <span class="cal__week-day-num" [class.cal__week-day-num--today]="day.isToday">
+                {{ day.date.getDate() }}
+              </span>
+            </div>
+
+            <div class="cal__week-events">
+              @if (day.events.length === 0) {
+                <div class="cal__week-empty" aria-hidden="true"></div>
+              }
+              @for (ev of day.events; track ev.id) {
+                <button
+                  class="cal__event-card"
+                  [class]="'cal__event-card cal__event-card--' + ev.status + (isOverdue(ev) ? ' cal__event-card--overdue' : '')"
+                  type="button"
+                  (click)="openDetail($event, ev)"
+                  [attr.aria-label]="(machineMap().get(ev.machine_id) ?? '—') + ' - ' + typeLabels[ev.type] + ' - ' + statusLabels[ev.status]"
+                  [attr.aria-pressed]="selectedEvent()?.id === ev.id"
+                >
+                  <span class="cal__event-card-machine">{{ machineMap().get(ev.machine_id) ?? '—' }}</span>
+                  <span class="cal__event-card-type">{{ typeLabels[ev.type] }}</span>
+                  @if (isOverdue(ev)) {
+                    <span class="cal__event-card-overdue" aria-label="Vencido">Vencido</span>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+  }
+
+  <!-- ── Event detail side panel ── -->
+  @if (selectedEvent(); as ev) {
+    <aside
+      class="cal__detail"
+      role="dialog"
+      aria-modal="false"
+      aria-label="Detalle del mantenimiento"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="cal__detail-inner">
+        <div class="cal__detail-header">
+          <h3 class="cal__detail-title">{{ machineMap().get(ev.machine_id) ?? '—' }}</h3>
+          <button
+            class="cal__detail-close"
+            type="button"
+            (click)="closeDetail()"
+            aria-label="Cerrar detalle"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="cal__detail-body">
+          <div class="cal__detail-badges">
+            <span [class]="'cal__badge cal__badge--type-' + ev.type">{{ typeLabels[ev.type] }}</span>
+            <span [class]="'cal__badge cal__badge--status-' + ev.status">{{ statusLabels[ev.status] }}</span>
+            @if (isOverdue(ev)) {
+              <span class="cal__badge cal__badge--overdue">Vencido</span>
+            }
+          </div>
+
+          <dl class="cal__detail-dl">
+            <dt>Fecha programada</dt>
+            <dd>{{ ev.scheduled_at | date: 'dd/MM/yyyy' }}</dd>
+
+            @if (ev.technician_name) {
+              <dt>Técnico</dt>
+              <dd>{{ ev.technician_name }}</dd>
+            }
+
+            @if (ev.started_at) {
+              <dt>Inicio</dt>
+              <dd>{{ ev.started_at | date: 'dd/MM/yyyy' }}</dd>
+            }
+
+            @if (ev.completed_at) {
+              <dt>Fin</dt>
+              <dd>{{ ev.completed_at | date: 'dd/MM/yyyy' }}</dd>
+            }
+
+            @if (ev.description) {
+              <dt>Descripción</dt>
+              <dd>{{ ev.description }}</dd>
+            }
+
+            @if (ev.notes) {
+              <dt>Notas</dt>
+              <dd>{{ ev.notes }}</dd>
+            }
+
+            <dt>Tareas</dt>
+            <dd>{{ ev.task_count }}</dd>
+          </dl>
+        </div>
+
+        <div class="cal__detail-footer">
+          <a
+            class="cal__detail-link"
+            routerLink="/dashboard/mantenimientos"
+            [queryParams]="{ id: ev.id }"
+            (click)="closeDetail()"
+          >
+            Ver en mantenimientos →
+          </a>
+        </div>
+      </div>
+    </aside>
+  }
+
+</section>
