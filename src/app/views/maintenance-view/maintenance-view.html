@@ -258,6 +258,24 @@
                             Gestionar tareas
                           </button>
                         </li>
+                        @if (item.status !== 'completed') {
+                          <li role="none">
+                            <button
+                              class="maintenance__dropdown-item maintenance__dropdown-item--complete"
+                              type="button"
+                              role="menuitem"
+                              [disabled]="completingId() === item.id"
+                              (click)="markAsCompleted(item)"
+                            >
+                              @if (completingId() === item.id) {
+                                <app-spinner size="sm" label="Completando mantenimiento" />
+                                Completando…
+                              } @else {
+                                Marcar como completado
+                              }
+                            </button>
+                          </li>
+                        }
                         @if (authStore.isAdmin()) {
                           <li role="separator" class="maintenance__dropdown-separator"></li>
                           <li role="none">
@@ -490,6 +508,22 @@
         </footer>
       </form>
 
+    </div>
+  </app-modal>
+}
+
+@if (completeBlockedItem(); as blocked) {
+  <app-modal title="No se puede completar" (closed)="closeCompleteBlocked()">
+    <div class="delete-confirm">
+      <p class="delete-confirm__message">
+        <strong>{{ blocked.name }}</strong> tiene
+        {{ blocked.pendingCount }} {{ blocked.pendingCount === 1 ? 'tarea' : 'tareas' }}
+        {{ blocked.pendingCount === 1 ? 'pendiente o en progreso' : 'pendientes o en progreso' }}.
+        Completa o descarta todas las tareas antes de marcar el mantenimiento como completado.
+      </p>
+      <footer class="mnt-form__footer">
+        <app-button variant="primary" type="button" (click)="closeCompleteBlocked()">Entendido</app-button>
+      </footer>
     </div>
   </app-modal>
 }

@@ -20,6 +20,12 @@
   min-width: 0;
 }
 
+.tv__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .tv__header-sep {
   color: #d1d5db;
   font-weight: 300;

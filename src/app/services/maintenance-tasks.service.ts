@@ -86,6 +86,16 @@ export class MaintenanceTasksService {
     return { error };
   }
 
+  async fetchTasksForMaintenance(maintenanceId: number): Promise<MaintenanceTask[]> {
+    const { data } = await this.supabaseService.supabase
+      .from('maintenance_tasks')
+      .select('*')
+      .eq('maintenance_id', maintenanceId)
+      .order('order_index', { ascending: true });
+
+    return (data as MaintenanceTask[]) ?? [];
+  }
+
   async delete(id: number, maintenanceId: number): Promise<{ error: unknown }> {
     const { error } = await this.supabaseService.supabase
       .from('maintenance_tasks')

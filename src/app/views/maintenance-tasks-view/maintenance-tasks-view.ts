@@ -22,6 +22,7 @@ import {
   TASK_STATUS_OPTIONS,
 } from '../../constants/domain.const';
 import { TaskImagesService } from '../../services/task-images.service';
+import { TasksReportService } from '../../services/tasks-report.service';
 import { AuthStore } from '../../core/auth.store';
 
 @Component({
@@ -42,6 +43,7 @@ export class MaintenanceTasksView {
   private readonly maintenanceService = inject(MaintenanceService);
   private readonly machinesService = inject(MachinesService);
   private readonly authStore = inject(AuthStore);
+  private readonly reportService = inject(TasksReportService);
 
   readonly isAdmin = this.authStore.isAdmin;
 
@@ -85,6 +87,8 @@ export class MaintenanceTasksView {
     const idx = this.lightboxIndex();
     return idx !== null && idx < this.imagesService.images().length - 1;
   });
+
+  readonly exportingPdf = signal(false);
 
   readonly taskStatusOptions = TASK_STATUS_OPTIONS;
 
@@ -320,6 +324,21 @@ export class MaintenanceTasksView {
     if (preview) URL.revokeObjectURL(preview);
     this.pendingFiles.update(files => files.filter((_, i) => i !== index));
     this.pendingPreviews.update(prev => prev.filter((_, i) => i !== index));
+  }
+
+  async generateReport(): Promise<void> {
+    const maintenance = this.maintenance();
+    if (!maintenance || this.exportingPdf()) return;
+    this.exportingPdf.set(true);
+    try {
+      await this.reportService.generatePdf(
+        this.tasksService.tasks(),
+        maintenance,
+        this.machine(),
+      );
+    } finally {
+      this.exportingPdf.set(false);
+    }
   }
 
   async uploadImages(): Promise<void> {

@@ -29,6 +29,7 @@ import { ButtonComponent } from '../../components/button/button.component';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { BadgeComponent } from '../../components/badge/badge.component';
 import { EmptyStateComponent } from '../../components/empty-state/empty-state.component';
+import { SpinnerComponent } from '../../components/spinner/spinner.component';
 import { Machine, MachinesService } from '../../services/machines.service';
 import { AuthStore } from '../../core/auth.store';
 import {
@@ -59,7 +60,7 @@ import { MaintenanceExportService } from '../../services/maintenance-export.serv
 @Component({
   selector: 'app-maintenance-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ButtonComponent, ModalComponent, BadgeComponent, EmptyStateComponent, ReactiveFormsModule, DatePipe],
+  imports: [ButtonComponent, ModalComponent, BadgeComponent, EmptyStateComponent, SpinnerComponent, ReactiveFormsModule, DatePipe],
   templateUrl: './maintenance-view.html',
   styleUrl: './maintenance-view.css',
   host: {
@@ -85,6 +86,8 @@ export class MaintenanceView {
   readonly deleteTargetId = signal<number | null>(null);
   readonly deleting = signal(false);
   readonly exportMenuOpen = signal(false);
+  readonly completingId = signal<number | null>(null);
+  readonly completeBlockedItem = signal<{ name: string; pendingCount: number } | null>(null);
 
   readonly tasksModalItem = signal<Maintenance | null>(null);
   readonly tasksModalOpen = computed(() => this.tasksModalItem() !== null);
@@ -311,7 +314,7 @@ export class MaintenanceView {
       type            : item.type,
       status          : item.status,
       description     : item.description ?? '',
-      scheduled_at    : toLocalDateTimeString(new Date(item.scheduled_at)),
+      scheduled_at    : toLocalDateTimeString(new Date(item.scheduled_at)).slice(0, 10),
       notes           : item.notes ?? '',
       assigned_user_id: item.assigned_user_id ?? null,
     });
@@ -329,6 +332,40 @@ export class MaintenanceView {
 
   cancelDelete(): void {
     this.deleteTargetId.set(null);
+  }
+
+  async markAsCompleted(item: Maintenance): Promise<void> {
+    this.openDropdownId.set(null);
+    if (this.completingId() !== null) return;
+
+    this.completingId.set(item.id);
+    try {
+      const tasks = await this.tasksService.fetchTasksForMaintenance(item.id);
+      const pendingCount = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
+
+      if (pendingCount > 0) {
+        const machine = this.machineMap().get(item.machine_id);
+        this.completeBlockedItem.set({ name: machine?.name ?? 'este mantenimiento', pendingCount });
+        return;
+      }
+
+      const payload: MaintenanceUpdatePayload = {
+        machine_id      : item.machine_id,
+        type            : item.type,
+        status          : 'completed',
+        description     : item.description,
+        scheduled_at    : item.scheduled_at,
+        notes           : item.notes,
+        assigned_user_id: item.assigned_user_id,
+      };
+      await this.maintenanceService.update(item.id, payload);
+    } finally {
+      this.completingId.set(null);
+    }
+  }
+
+  closeCompleteBlocked(): void {
+    this.completeBlockedItem.set(null);
   }
 
   async confirmDelete(): Promise<void> {
