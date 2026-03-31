@@ -96,15 +96,13 @@ export class MaintenanceTasksService {
       return (data as MaintenanceTask[]) ?? [];
     }
 
-    async delete(id: number, maintenanceId: number): Promise<{ error: unknown }> {
+  async delete(id: number, maintenanceId: number): Promise<{ error: unknown }> {
 
-    // 1. Obtener todos los IDs de imágenes de la tarea
     const { data: images } = await this.supabaseService.supabase
       .from('task_images')
       .select('id')
       .eq('task_id', id);
 
-    // 2. Enviar todos los IDs en una sola invocación
     if (images && images.length > 0) {
       const { error: imgError } = await this.supabaseService.supabase.functions.invoke('delete-task-image', {
         body: { image_ids: images.map(i => i.id) }
@@ -115,7 +113,6 @@ export class MaintenanceTasksService {
       }
     }
 
-    // 3. Eliminar la tarea
     const { error } = await this.supabaseService.supabase
       .from('maintenance_tasks')
       .delete()
@@ -128,17 +125,4 @@ export class MaintenanceTasksService {
 
     return { error };
   }
-
-  // async delete(id: number, maintenanceId: number): Promise<{ error: unknown }> {
-  //   const { error } = await this.supabaseService.supabase
-  //     .from('maintenance_tasks')
-  //     .delete()
-  //     .eq('id', id);
-
-  //   if (!error) {
-  //     this._tasks.update(list => list.filter(t => t.id !== id));
-  //     this.maintenanceService.adjustTaskCount(maintenanceId, -1);
-  //   }
-  //   return { error };
-  // }
 }

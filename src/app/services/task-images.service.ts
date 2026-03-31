@@ -22,11 +22,13 @@ export class TaskImagesService {
   private readonly _loading = signal(false);
   private readonly _uploading = signal(false);
   private readonly _uploadError = signal<string | null>(null);
+  private readonly _imageCounts = signal<Record<number, number>>({});
 
   readonly images = this._images.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly uploading = this._uploading.asReadonly();
   readonly uploadError = this._uploadError.asReadonly();
+  readonly imageCounts = this._imageCounts.asReadonly();
 
   async loadForTask(taskId: number): Promise<void> {
     this._loading.set(true);
@@ -87,5 +89,24 @@ export class TaskImagesService {
     }
 
     return { failedCount }
+  }
+
+  async loadCountsForTasks(taskIds: number[]): Promise<void> {
+    if (taskIds.length === 0) return;
+    const { data } = await this.supabaseService.supabase
+      .from('task_images')
+      .select('task_id')
+      .in('task_id', taskIds);
+
+    const counts: Record<number, number> = {};
+    for (const id of taskIds) counts[id] = 0;
+    for (const row of (data ?? []) as { task_id: number }[]) {
+      counts[row.task_id] = (counts[row.task_id] ?? 0) + 1;
+    }
+    this._imageCounts.set(counts);
+  }
+
+  updateCountForTask(taskId: number, count: number): void {
+    this._imageCounts.update(m => ({ ...m, [taskId]: count }));
   }
 }

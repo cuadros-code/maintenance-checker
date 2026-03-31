@@ -130,7 +130,13 @@ export class MaintenanceTasksView {
   constructor() {
     this.maintenanceService.load();
     this.machinesService.load();
-    this.tasksService.loadForMaintenance(this.maintenanceId);
+    this.loadTasksAndCounts();
+  }
+
+  private async loadTasksAndCounts(): Promise<void> {
+    await this.tasksService.loadForMaintenance(this.maintenanceId);
+    const ids = this.tasksService.tasks().map(t => t.id);
+    await this.imagesService.loadCountsForTasks(ids);
   }
 
   onEscape(): void {
@@ -182,8 +188,13 @@ export class MaintenanceTasksView {
     }
   }
 
-  async onStatusChange(task: MaintenanceTask, event: Event): Promise<void> {
-    const status = (event.target as HTMLSelectElement).value as TaskStatus;
+  async onStatusChange(task: MaintenanceTask, status: TaskStatus): Promise<void> {
+    if (task.status === status) return;
+    await this.tasksService.update(task.id, { status }, this.maintenanceId);
+  }
+
+  async toggleComplete(task: MaintenanceTask): Promise<void> {
+    const status: TaskStatus = task.status === 'completed' ? 'pending' : 'completed';
     await this.tasksService.update(task.id, { status }, this.maintenanceId);
   }
 
@@ -236,7 +247,12 @@ export class MaintenanceTasksView {
         notes         : raw.notes || null,
       };
       const { error } = await this.tasksService.create(payload);
-      if (!error) this.closeAddModal();
+      if (!error) {
+        const tasks = this.tasksService.tasks();
+        const newest = tasks[tasks.length - 1];
+        if (newest) this.imagesService.updateCountForTask(newest.id, 0);
+        this.closeAddModal();
+      }
     } finally {
       this.addSubmitting.set(false);
     }
@@ -255,6 +271,10 @@ export class MaintenanceTasksView {
   }
 
   closeImagesModal(): void {
+    const task = this.imagesModalTask();
+    if (task) {
+      this.imagesService.updateCountForTask(task.id, this.imagesService.images().length);
+    }
     this.lightboxIndex.set(null);
     this.pendingPreviews().forEach(url => URL.revokeObjectURL(url));
     this.imagesModalTask.set(null);
@@ -338,6 +358,99 @@ export class MaintenanceTasksView {
       );
     } finally {
       this.exportingPdf.set(false);
+    }
+  }
+
+  // ── Quick-add ──────────────────────────────────────────────────────────
+  readonly activeQuickAdd = signal<TaskStatus | null>(null);
+  readonly quickAddTitle = signal('');
+  readonly quickAddSubmitting = signal(false);
+
+  openQuickAdd(status: TaskStatus): void {
+    this.activeQuickAdd.set(status);
+    this.quickAddTitle.set('');
+    setTimeout(() => {
+      (document.querySelector('.tv__quick-add-input') as HTMLInputElement | null)?.focus();
+    }, 0);
+  }
+
+  cancelQuickAdd(): void {
+    this.activeQuickAdd.set(null);
+    this.quickAddTitle.set('');
+  }
+
+  async submitQuickAdd(status: TaskStatus): Promise<void> {
+    const title = this.quickAddTitle().trim();
+    if (!title || this.quickAddSubmitting()) return;
+    const capturedTitle = title;
+    this.cancelQuickAdd();
+    this.quickAddSubmitting.set(true);
+    try {
+      const payload: MaintenanceTaskPayload = {
+        maintenance_id: this.maintenanceId,
+        title: capturedTitle,
+        description: null,
+        order_index: this.tasksService.tasks().length,
+        status,
+        notes: null,
+      };
+      const { error } = await this.tasksService.create(payload);
+      if (!error) {
+        const tasks = this.tasksService.tasks();
+        const newest = tasks[tasks.length - 1];
+        if (newest) this.imagesService.updateCountForTask(newest.id, 0);
+      }
+    } finally {
+      this.quickAddSubmitting.set(false);
+    }
+  }
+
+  onQuickAddKeydown(event: KeyboardEvent, status: TaskStatus): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.submitQuickAdd(status);
+    } else if (event.key === 'Escape') {
+      this.cancelQuickAdd();
+    }
+  }
+
+  // ── Inline notes ───────────────────────────────────────────────────────
+  readonly inlineEditingNoteId = signal<number | null>(null);
+  readonly inlineNoteValue = signal('');
+
+  startInlineNote(task: MaintenanceTask): void {
+    this.inlineEditingNoteId.set(task.id);
+    this.inlineNoteValue.set(task.notes ?? '');
+    setTimeout(() => {
+      const ta = document.querySelector('.tv__inline-note-input') as HTMLTextAreaElement | null;
+      if (ta) {
+        ta.focus();
+        ta.setSelectionRange(ta.value.length, ta.value.length);
+      }
+    }, 0);
+  }
+
+  async saveInlineNote(task: MaintenanceTask): Promise<void> {
+    if (this.inlineEditingNoteId() !== task.id) return;
+    const value = this.inlineNoteValue().trim() || null;
+    this.cancelInlineNote();
+    if (value !== (task.notes ?? null)) {
+      await this.tasksService.update(task.id, { notes: value }, this.maintenanceId);
+    }
+  }
+
+  cancelInlineNote(): void {
+    this.inlineEditingNoteId.set(null);
+    this.inlineNoteValue.set('');
+  }
+
+  onInlineNoteKeydown(event: KeyboardEvent, task: MaintenanceTask): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.cancelInlineNote();
+    } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      this.saveInlineNote(task);
     }
   }
 

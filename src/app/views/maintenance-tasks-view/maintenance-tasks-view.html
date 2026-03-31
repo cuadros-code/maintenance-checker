@@ -67,15 +67,29 @@
 
           <div class="tv__col-body">
             @for (task of tasksByStatus()[col.status]; track task.id) {
-              <article class="tv__card">
+              <article class="tv__card" [class.tv__card--completed]="task.status === 'completed'">
                 <div class="tv__card-header">
+                  <button
+                    class="tv__check-btn"
+                    [class.tv__check-btn--done]="task.status === 'completed'"
+                    type="button"
+                    [attr.aria-label]="task.status === 'completed' ? 'Desmarcar completada: ' + task.title : 'Marcar completada: ' + task.title"
+                    [attr.aria-pressed]="task.status === 'completed'"
+                    (click)="toggleComplete(task)"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+                      <path d="M1.5 5.5l2.5 2.5 5.5-5.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+
                   <span class="tv__card-num" aria-hidden="true">#{{ task.order_index + 1 }}</span>
+
                   <div class="tv__card-btns">
                     @if (isAdmin()) {
                       <button
                         class="tv__icon-btn tv__icon-btn--danger"
                         type="button"
-                        [attr.aria-label]="'Eliminar tarea ' + task.title"
+                        [attr.aria-label]="'Eliminar tarea: ' + task.title"
                         (click)="requestDelete(task)"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -83,35 +97,26 @@
                         </svg>
                       </button>
                     }
+
                     <button
-                      class="tv__icon-btn"
+                      class="tv__img-badge"
+                      [class.tv__img-badge--has-images]="(imagesService.imageCounts()[task.id] ?? 0) > 0"
                       type="button"
-                      [attr.aria-label]="'Ver imágenes de ' + task.title"
+                      [attr.aria-label]="'Imágenes de ' + task.title + ' (' + (imagesService.imageCounts()[task.id] ?? 0) + ')'"
                       (click)="openImagesModal(task, 'view')"
                     >
-                      <!-- eye -->
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
-                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.75"/>
-                      </svg>
-                    </button>
-                    <button
-                      class="tv__icon-btn"
-                      type="button"
-                      [attr.aria-label]="'Subir imágenes a ' + task.title"
-                      (click)="openImagesModal(task, 'upload')"
-                    >
-                      <!-- camera -->
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <rect x="2" y="5" width="20" height="15" rx="2" stroke="currentColor" stroke-width="1.75"/>
                         <circle cx="12" cy="13" r="3.5" stroke="currentColor" stroke-width="1.75"/>
-                        <path d="M9 5l1-2h4l1 2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9 5l1-2h4l1 2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
                       </svg>
+                      <span>{{ (imagesService.imageCounts()[task.id] ?? 0) > 0 ? imagesService.imageCounts()[task.id] : '+' }}</span>
                     </button>
+
                     <button
                       class="tv__icon-btn"
                       type="button"
-                      [attr.aria-label]="'Editar ' + task.title"
+                      [attr.aria-label]="'Editar tarea: ' + task.title"
                       (click)="openEditModal(task)"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -127,31 +132,85 @@
                   <p class="tv__card-desc">{{ task.description }}</p>
                 }
 
-                @if (task.notes) {
-                  <p class="tv__card-notes">
-                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                      <path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 6v5m0-7v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
-                    {{ task.notes }}
-                  </p>
+                @if (inlineEditingNoteId() === task.id) {
+                  <div class="tv__inline-note-edit">
+                    <textarea
+                      class="tv__inline-note-input"
+                      rows="2"
+                      [value]="inlineNoteValue()"
+                      (input)="inlineNoteValue.set($any($event.target).value)"
+                      (keydown)="onInlineNoteKeydown($event, task)"
+                      (blur)="saveInlineNote(task)"
+                      placeholder="Escribe una nota…"
+                      [attr.aria-label]="'Nota de ' + task.title"
+                    ></textarea>
+                    <span class="tv__inline-note-hint" aria-hidden="true">Ctrl+Enter guardar · Esc cancelar</span>
+                  </div>
+                } @else {
+                  <button
+                    class="tv__card-notes-btn"
+                    type="button"
+                    [attr.aria-label]="task.notes ? 'Editar nota de ' + task.title : 'Añadir nota a ' + task.title"
+                    (click)="startInlineNote(task)"
+                  >
+                    @if (task.notes) {
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 6v5m0-7v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
+                      <span class="tv__card-notes-text">{{ task.notes }}</span>
+                    } @else {
+                      <span class="tv__card-notes-add">+ Nota</span>
+                    }
+                  </button>
                 }
 
                 <div class="tv__card-footer">
-                  <select
-                    class="tv__status-select tv__status-select--{{ task.status }}"
-                    [attr.aria-label]="'Mover ' + task.title + ' a'"
-                    (change)="onStatusChange(task, $event)"
-                  >
+                  <div class="tv__status-pills" role="group" [attr.aria-label]="'Cambiar estado de ' + task.title">
                     @for (opt of taskStatusOptions; track opt.value) {
-                      <option [value]="opt.value" [selected]="task.status === opt.value">{{ opt.label }}</option>
+                      <button
+                        class="tv__status-pill tv__status-pill--{{ opt.value }}"
+                        [class.tv__status-pill--active]="task.status === opt.value"
+                        type="button"
+                        [attr.aria-pressed]="task.status === opt.value"
+                        [attr.aria-label]="opt.label"
+                        (click)="onStatusChange(task, opt.value)"
+                      >{{ opt.label }}</button>
                     }
-                  </select>
+                  </div>
                 </div>
               </article>
             }
 
-            @if (tasksByStatus()[col.status].length === 0) {
+            @if (tasksByStatus()[col.status].length === 0 && activeQuickAdd() !== col.status) {
               <div class="tv__col-empty" aria-hidden="true">Sin tareas</div>
+            }
+
+            @if (activeQuickAdd() === col.status) {
+              <div class="tv__quick-add">
+                <input
+                  class="tv__quick-add-input"
+                  type="text"
+                  placeholder="Título de la tarea…"
+                  [value]="quickAddTitle()"
+                  (input)="quickAddTitle.set($any($event.target).value)"
+                  (keydown)="onQuickAddKeydown($event, col.status)"
+                  (blur)="cancelQuickAdd()"
+                  aria-label="Título de nueva tarea"
+                />
+                <span class="tv__quick-add-hint" aria-hidden="true">↵ Enter crear · Esc cancelar</span>
+              </div>
+            } @else {
+              <button
+                class="tv__quick-add-btn"
+                type="button"
+                [attr.aria-label]="'Agregar tarea en ' + col.label"
+                (click)="openQuickAdd(col.status)"
+              >
+                <svg width="10" height="10" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Agregar tarea
+              </button>
             }
           </div>
 
