@@ -17,6 +17,15 @@
     </div>
 
     <div class="navbar__user">
+      <button
+        class="btn btn--incident"
+        type="button"
+        (click)="incidentModalOpen.set(true)"
+        aria-label="Reportar un incidente"
+      >
+        <span class="material-icons btn--incident__icon" aria-hidden="true">warning</span>
+        <span class="btn--incident__label">Reportar incidente</span>
+      </button>
       <span class="navbar__email" aria-label="Usuario autenticado">
         {{ auth.user()?.email }}
       </span>
@@ -29,11 +38,21 @@
         (click)="signOut()"
         [disabled]="loggingOut()"
         [attr.aria-busy]="loggingOut()"
+        [attr.aria-label]="loggingOut() ? 'Saliendo...' : 'Cerrar sesión'"
       >
-        {{ loggingOut() ? 'Saliendo...' : 'Cerrar sesión' }}
+        <span class="btn--logout__label">{{ loggingOut() ? 'Saliendo...' : 'Cerrar sesión' }}</span>
+        <span class="material-icons btn--logout__icon" aria-hidden="true">logout</span>
       </button>
     </div>
   </header>
+
+  @if (incidentModalOpen()) {
+    <app-incident-modal
+      [userEmail]="auth.user()?.email ?? null"
+      (closed)="incidentModalOpen.set(false)"
+      (reported)="incidentModalOpen.set(false)"
+    />
+  }
 
   <div class="body">
     <app-sidebar

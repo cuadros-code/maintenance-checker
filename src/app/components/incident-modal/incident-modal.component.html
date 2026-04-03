@@ -1,0 +1,118 @@
+<app-modal title="Reportar incidente" (closed)="close()">
+  @if (success()) {
+    <div class="incident-success" role="status">
+      <span class="incident-success__icon" aria-hidden="true">&#10003;</span>
+      <p class="incident-success__title">Incidente reportado</p>
+      <p class="incident-success__desc">El equipo fue notificado y recibirás una confirmación en tu correo.</p>
+      <button class="incident-btn incident-btn--primary" type="button" (click)="close()">Cerrar</button>
+    </div>
+  } @else {
+    <form class="incident-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <app-form-field label="Título" forId="inc-title" [error]="titleError()">
+        <input
+          id="inc-title"
+          class="incident-input"
+          type="text"
+          formControlName="title"
+          placeholder="Ej. Falla en compresor sala A"
+          autocomplete="off"
+          [attr.aria-invalid]="titleError() ? 'true' : null"
+        />
+      </app-form-field>
+
+      <app-form-field label="Severidad" forId="inc-severity" [error]="severityError()">
+        <select
+          id="inc-severity"
+          class="incident-input incident-input--select"
+          formControlName="severity"
+          [attr.aria-invalid]="severityError() ? 'true' : null"
+        >
+          <option value="" disabled>Selecciona un nivel</option>
+          <option value="low">Bajo</option>
+          <option value="medium">Medio</option>
+          <option value="high">Alto</option>
+        </select>
+      </app-form-field>
+
+      <app-form-field label="Descripción" forId="inc-desc" [error]="descriptionError()">
+        <textarea
+          id="inc-desc"
+          class="incident-input incident-input--textarea"
+          formControlName="description"
+          placeholder="Describe el incidente con el mayor detalle posible..."
+          rows="4"
+          [attr.aria-invalid]="descriptionError() ? 'true' : null"
+        ></textarea>
+      </app-form-field>
+
+      <!-- Técnicos a notificar -->
+      <div class="recipients-field" [class.recipients-field--error]="recipientsError()">
+        <p class="recipients-field__label" id="inc-recipients-label">
+          Técnicos a notificar
+          <span class="recipients-field__hint">(máx. 2)</span>
+        </p>
+
+        @if (loadingTechnicians()) {
+          <p class="recipients-field__loading" aria-live="polite">Cargando técnicos...</p>
+        } @else if (technicians().length === 0) {
+          <p class="recipients-field__empty">No hay técnicos registrados.</p>
+        } @else {
+          <ul
+            class="recipients-list"
+            role="group"
+            aria-labelledby="inc-recipients-label"
+          >
+            @for (tech of technicians(); track tech.id) {
+              <li>
+                <button
+                  class="recipient-chip"
+                  type="button"
+                  [class.recipient-chip--selected]="isSelected(tech.email)"
+                  [disabled]="isDisabled(tech.email)"
+                  [attr.aria-pressed]="isSelected(tech.email)"
+                  [attr.aria-label]="'Notificar a ' + tech.email"
+                  (click)="toggleRecipient(tech.email)"
+                >
+                  <span class="recipient-chip__avatar" aria-hidden="true">
+                    {{ tech.email[0].toUpperCase() }}
+                  </span>
+                  <span class="recipient-chip__email">{{ tech.email }}</span>
+                  @if (isSelected(tech.email)) {
+                    <span class="recipient-chip__check" aria-hidden="true">&#10003;</span>
+                  }
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (recipientsError()) {
+          <span class="recipients-field__error" role="alert">{{ recipientsError() }}</span>
+        }
+      </div>
+
+      @if (submitError()) {
+        <p class="incident-error" role="alert">{{ submitError() }}</p>
+      }
+
+      <div class="incident-actions">
+        <button
+          class="incident-btn incident-btn--ghost"
+          type="button"
+          (click)="close()"
+          [disabled]="submitting()"
+        >
+          Cancelar
+        </button>
+        <button
+          class="incident-btn incident-btn--danger"
+          type="submit"
+          [disabled]="submitting()"
+          [attr.aria-busy]="submitting()"
+        >
+          {{ submitting() ? 'Enviando...' : 'Reportar incidente' }}
+        </button>
+      </div>
+    </form>
+  }
+</app-modal>
