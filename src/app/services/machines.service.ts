@@ -1,6 +1,14 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { MachineStatus } from '../constants/machines.const';
 import { SupabaseService } from './supabase.service';
+import { ToastService } from '../core/toast.service';
+
+function errorMessage(error: unknown): string {
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return 'Ocurrió un error inesperado';
+}
 
 export interface Machine {
   id: number;
@@ -17,6 +25,7 @@ export type MachinePayload = Omit<Machine, 'id' | 'created_at'>;
 @Injectable({ providedIn: 'root' })
 export class MachinesService {
   private readonly supabaseService = inject(SupabaseService);
+  private readonly toast = inject(ToastService);
 
   private readonly _machines = signal<Machine[]>([]);
   private readonly _loading = signal(false);
@@ -56,6 +65,9 @@ export class MachinesService {
       this._machines.update(list =>
         [...list, data as Machine].sort((a, b) => a.status.localeCompare(b.status))
       );
+      this.toast.success('Equipo creado correctamente');
+    } else if (error) {
+      this.toast.error(`Error al crear el equipo: ${errorMessage(error)}`);
     }
     return { error };
   }
@@ -74,6 +86,9 @@ export class MachinesService {
           .map(m => (m.id === id ? (data as Machine) : m))
           .sort((a, b) => a.status.localeCompare(b.status))
       );
+      this.toast.success('Equipo actualizado correctamente');
+    } else if (error) {
+      this.toast.error(`Error al actualizar el equipo: ${errorMessage(error)}`);
     }
     return { error };
   }

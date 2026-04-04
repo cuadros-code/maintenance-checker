@@ -2,6 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { AuthStore } from '../core/auth.store';
 import { ImageCompressService } from '../utils/image-compress.util';
+import { ToastService } from '../core/toast.service';
 export interface TaskImage {
   id: number;
   task_id: number;
@@ -16,7 +17,8 @@ export interface TaskImage {
 export class TaskImagesService {
   private readonly supabaseService = inject(SupabaseService);
   private readonly authStore = inject(AuthStore);
-  private compressService = inject(ImageCompressService)
+  private compressService = inject(ImageCompressService);
+  private readonly toast = inject(ToastService);
 
   private readonly _images = signal<TaskImage[]>([]);
   private readonly _loading = signal(false);
@@ -79,10 +81,16 @@ export class TaskImagesService {
         this._images.update(list => [...list, data as TaskImage])
       }
 
+      const successCount = files.length - failedCount;
       if (failedCount > 0) {
-        this._uploadError.set(
-          `${failedCount} imagen${failedCount > 1 ? 'es' : ''} no se pudo${failedCount > 1 ? 'ieron' : ''} subir.`
-        )
+        const msg = `${failedCount} imagen${failedCount > 1 ? 'es' : ''} no se pudo${failedCount > 1 ? 'ieron' : ''} subir.`;
+        this._uploadError.set(msg);
+        this.toast.error(msg);
+      }
+      if (successCount > 0) {
+        this.toast.success(
+          `${successCount} imagen${successCount > 1 ? 'es subidas' : ' subida'} correctamente`
+        );
       }
     } finally {
       this._uploading.set(false)

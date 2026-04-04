@@ -2,6 +2,14 @@ import { inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { MaintenanceService } from './maintenance.service';
 import { TaskStatus } from '../constants/domain.const';
+import { ToastService } from '../core/toast.service';
+
+function errorMessage(error: unknown): string {
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return 'Ocurrió un error inesperado';
+}
 
 export type { TaskStatus };
 
@@ -31,6 +39,7 @@ export type MaintenanceTaskUpdatePayload = Partial<
 export class MaintenanceTasksService {
   private readonly supabaseService = inject(SupabaseService);
   private readonly maintenanceService = inject(MaintenanceService);
+  private readonly toast = inject(ToastService);
 
   private readonly _tasks = signal<MaintenanceTask[]>([]);
   private readonly _loading = signal(false);
@@ -64,6 +73,9 @@ export class MaintenanceTasksService {
     if (!error && data) {
       this._tasks.update(list => [...list, data as MaintenanceTask]);
       this.maintenanceService.adjustTaskCount(payload.maintenance_id, 1);
+      this.toast.success('Tarea creada correctamente');
+    } else if (error) {
+      this.toast.error(`Error al crear la tarea: ${errorMessage(error)}`);
     }
     return { error };
   }
@@ -82,6 +94,9 @@ export class MaintenanceTasksService {
 
     if (!error && data) {
       this._tasks.update(list => list.map(t => (t.id === id ? (data as MaintenanceTask) : t)));
+      this.toast.success('Tarea actualizada correctamente');
+    } else if (error) {
+      this.toast.error(`Error al actualizar la tarea: ${errorMessage(error)}`);
     }
     return { error };
   }
@@ -121,6 +136,9 @@ export class MaintenanceTasksService {
     if (!error) {
       this._tasks.update(list => list.filter(t => t.id !== id));
       this.maintenanceService.adjustTaskCount(maintenanceId, -1);
+      this.toast.success('Tarea eliminada correctamente');
+    } else {
+      this.toast.error(`Error al eliminar la tarea: ${errorMessage(error)}`);
     }
 
     return { error };

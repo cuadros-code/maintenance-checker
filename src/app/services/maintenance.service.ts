@@ -1,6 +1,14 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { MaintenanceType, MaintenanceStatus } from '../constants/domain.const';
+import { ToastService } from '../core/toast.service';
+
+function errorMessage(error: unknown): string {
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return 'Ocurrió un error inesperado';
+}
 
 export type { MaintenanceType, MaintenanceStatus };
 
@@ -32,6 +40,7 @@ const MAINTENANCE_SELECT = '*, maintenance_tasks(count)' as const;
 @Injectable({ providedIn: 'root' })
 export class MaintenanceService {
   private readonly supabaseService = inject(SupabaseService);
+  private readonly toast = inject(ToastService);
 
   private readonly _maintenances = signal<Maintenance[]>([]);
   private readonly _loading = signal(false);
@@ -83,6 +92,9 @@ export class MaintenanceService {
       this._maintenances.update(list =>
         [...list, record].sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
       );
+      this.toast.success('Mantenimiento creado correctamente');
+    } else if (error) {
+      this.toast.error(`Error al crear el mantenimiento: ${errorMessage(error)}`);
     }
     return { error };
   }
@@ -102,6 +114,9 @@ export class MaintenanceService {
           .map(m => (m.id === id ? record : m))
           .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
       );
+      this.toast.success('Mantenimiento actualizado correctamente');
+    } else if (error) {
+      this.toast.error(`Error al actualizar el mantenimiento: ${errorMessage(error)}`);
     }
     return { error };
   }
@@ -120,14 +135,22 @@ export class MaintenanceService {
       .delete()
       .eq('maintenance_id', id);
 
-    if (tasksError) return { error: tasksError };
+    if (tasksError) {
+      this.toast.error(`Error al eliminar el mantenimiento: ${errorMessage(tasksError)}`);
+      return { error: tasksError };
+    }
 
     const { error } = await this.supabaseService.supabase
       .from('maintenances')
       .delete()
       .eq('id', id);
 
-    if (!error) this._maintenances.update(list => list.filter(m => m.id !== id));
+    if (!error) {
+      this._maintenances.update(list => list.filter(m => m.id !== id));
+      this.toast.success('Mantenimiento eliminado correctamente');
+    } else {
+      this.toast.error(`Error al eliminar el mantenimiento: ${errorMessage(error)}`);
+    }
     return { error };
   }
 

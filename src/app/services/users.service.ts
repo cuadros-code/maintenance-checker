@@ -3,6 +3,14 @@ import { SupabaseService } from './supabase.service';
 import { AuthStore } from '../core/auth.store';
 import { environment } from '../../environments/environment';
 import { supabase } from '../core/supabase';
+import { ToastService } from '../core/toast.service';
+
+function errorMessage(error: unknown): string {
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return 'Ocurrió un error inesperado';
+}
 
 export type AppRole = 'admin' | 'technician' | 'supervisor';
 
@@ -23,6 +31,7 @@ export interface CreateUserPayload {
 export class UsersService {
   private readonly supabaseService = inject(SupabaseService);
   private readonly authStore = inject(AuthStore);
+  private readonly toast = inject(ToastService);
   private readonly _users = signal<UserWithRole[]>([]);
   private readonly _loading = signal(false);
   private _loaded = false;
@@ -64,7 +73,12 @@ export class UsersService {
         }
       });
 
-    if (!error) await this.reload();
+    if (!error) {
+      await this.reload();
+      this.toast.success('Usuario creado correctamente');
+    } else {
+      this.toast.error(`Error al crear el usuario: ${errorMessage(error)}`);
+    }
     return { error };
   }
 }
