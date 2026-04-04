@@ -14,7 +14,7 @@ import { FormFieldComponent } from '../form-field/form-field.component';
 import { IncidentService } from '../../services/incident.service';
 import { UsersService } from '../../services/users.service';
 
-const MAX_RECIPIENTS = 2;
+const MAX_RECIPIENTS = 5;
 
 @Component({
   selector: 'app-incident-modal',
